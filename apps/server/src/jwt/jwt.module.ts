@@ -1,6 +1,6 @@
 import { DynamicModule, Global, Module } from '@nestjs/common'
 import { Secret } from 'jsonwebtoken'
-import { JWT_PROVIDER } from 'src/common/common.constants'
+import { JWT_PROVIDER } from 'common/common.constants'
 import { JwtModuleOptions } from './jwt.interface'
 import { JwtService } from './jwt.service'
 @Module({})

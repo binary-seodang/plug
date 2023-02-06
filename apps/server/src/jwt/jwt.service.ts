@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common'
-import { JWT_PROVIDER } from 'src/common/common.constants'
+import { JWT_PROVIDER } from 'common/common.constants'
 import { JwtModuleOptions } from './jwt.interface'
 import jwt, { Algorithm } from 'jsonwebtoken'
 

@@ -1,9 +1,9 @@
-import { UsersService } from 'src/users/users.service'
+import { UsersService } from 'users/users.service'
 import { Query, Mutation, Resolver, Args } from '@nestjs/graphql'
 import { LoginInput, LoginOutput } from './dtos/login.dto'
-import { AuthUser } from 'src/auth/auth-user.decorator'
+import { AuthUser } from 'auth/auth-user.decorator'
 import { User } from './entities/user.entity'
-import { Role } from 'src/auth/role.decorator'
+import { Role } from 'auth/role.decorator'
 import { UserProfileOutput } from './dtos/user-profile.dto'
 
 @Resolver(() => User)

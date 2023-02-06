@@ -1,7 +1,7 @@
-import { WrtcService } from '../wrtc/wrtc.service'
-import { JwtService } from 'src/jwt/jwt.service'
-import { UsersService } from 'src/users/users.service'
-import { WSAuthMiddleware } from 'src/sockets/sockets.middleware'
+import { WrtcService } from 'wrtc/wrtc.service'
+import { JwtService } from 'jwt/jwt.service'
+import { UsersService } from 'users/users.service'
+import { WSAuthMiddleware } from 'sockets/sockets.middleware'
 import { UseFilters, Logger } from '@nestjs/common'
 import { WebSocketGateway } from '@nestjs/websockets'
 import {
@@ -16,9 +16,9 @@ import {
   OnGatewayInit,
 } from '@nestjs/websockets/interfaces'
 import { Namespace, Socket, AuthSocket } from 'socket.io'
-import { getServerRoomDto } from 'src/events/dtos/gateway.dto'
+import { getServerRoomDto } from 'events/dtos/gateway.dto'
 
-import { WsExceptionFilter } from 'src/sockets/sockets-exception.filter'
+import { WsExceptionFilter } from 'sockets/sockets-exception.filter'
 
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
