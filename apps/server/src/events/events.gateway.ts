@@ -1,3 +1,4 @@
+import { WrtcService } from 'wrtc/wrtc.service'
 import { WsExceptionFilter } from '../sockets/sockets-exception.filter'
 import { Inject, UseFilters, Logger } from '@nestjs/common'
 import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
@@ -35,6 +36,7 @@ export class EventsGateway
     @Inject(PrismaService) private readonly prismaService: PrismaService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly wrtcService: WrtcService,
   ) {}
 
   @WebSocketServer() public io: Namespace
@@ -74,9 +76,11 @@ export class EventsGateway
   //   return roomName
   // }
 
-  handleConnection(@ConnectedSocket() client: Socket) {
+  handleConnection(@ConnectedSocket() client: AuthSocket) {
     this.logger.debug(`connected : ${client.id}`)
     this.logger.debug(`namespace : ${client.nsp.name}`)
+    this.wrtcService.addConnection(client.sessionId)
+
     this.serverRoomChange()
   }
 

@@ -44,22 +44,49 @@ const Room = () => {
           },
         ],
       })
-      peer.addEventListener('icecandidate', (e) => {
-        if (!(e.candidate && socket)) return
-        console.log('sender Cadidate')
-        socket.emit('sender-cadidate', {
-          candidate: e.candidate,
-          senderId: socket.id,
-        })
+      // peer.addEventListener('icecandidate', (e) => {
+      //   if (!(e.candidate && socket)) return
+      //   console.log('sender Cadidate')
+      //   socket.emit('sender-cadidate', {
+      //     candidate: e.candidate,
+      //     senderId: socket.id,
+      //   })
+      // })
+      // peer.addEventListener('iceconnectionstatechange', (e) => {
+      //   console.log(e)
+      // })
+      socket.on('icecandidate', (data) => {
+        try {
+          console.log(peer)
+          peer.addIceCandidate(data.candidate)
+        } catch (e) {
+          console.error(e)
+        }
       })
-      peer.addEventListener('iceconnectionstatechange', (e) => {
-        console.log(e)
+      peer.addEventListener('track', (ev) => {
+        console.log(ev, 'track')
       })
 
       stream.getTracks().forEach((track) => {
         peer.addTrack(track, stream)
       })
-      socket.emit('stream', stream.id)
+      peer.createOffer().then((offer) => {
+        peer.setLocalDescription(offer)
+        socket.emit(
+          'stream',
+          {
+            channelId: roomName,
+            sdp: offer.sdp,
+            sessionId: socket.id,
+          },
+          (receivedOffer: RTCSessionDescriptionInit) => {
+            peer.setRemoteDescription({
+              type: 'answer',
+              sdp: receivedOffer.sdp,
+            })
+          },
+        )
+      })
     },
   })
   return (

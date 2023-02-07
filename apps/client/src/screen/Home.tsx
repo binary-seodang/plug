@@ -22,7 +22,6 @@ const Home = () => {
       nickname: user?.nickname,
     },
   })
-
   const onJoinRoom = useCallback(
     ({ roomName }: JoinRoomInput) => {
       navigate(roomName)

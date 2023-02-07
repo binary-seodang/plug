@@ -16,4 +16,9 @@ export class User extends CoreDTO implements PrismaUser {
   @IsEnum(UserRole)
   @IsOptional()
   role: UserRole | null
+
+  @Field(() => String, { nullable: true })
+  @IsString()
+  @IsOptional()
+  sessionId: string | null
 }

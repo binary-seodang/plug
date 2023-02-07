@@ -1,11 +1,11 @@
 {
   "name" : "database",
   "version": "0.0.1",
-  "main": "index.ts",
-  "types": "index.ts",
+  "main": "./index.js",
+  "types": "./index.ts",
   "scripts": {
     "db:generate" : "prisma generate",
-    "db:push" : "npx prisma db push --skip-generate"
+    "db:push" : "prisma db push"
   },
   "dependencies": {
     "@prisma/client": "^4.9.0"

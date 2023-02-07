@@ -19,6 +19,7 @@ import { Namespace, Socket, AuthSocket } from 'socket.io'
 import { getServerRoomDto } from 'events/dtos/gateway.dto'
 
 import { WsExceptionFilter } from 'sockets/sockets-exception.filter'
+import { CreateConnectionDto } from 'wrtc/dtos/create-connection.dto'
 
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
@@ -58,10 +59,15 @@ export class WorkspacesGateway
   }
 
   @SubscribeMessage('stream')
-  onStream(@ConnectedSocket() client: AuthSocket, @MessageBody() stream: any) {
-    const peer = this.wrtcService.createConnection()
-    console.log(peer)
-    return
+  async onStream(
+    @ConnectedSocket() client: AuthSocket,
+    @MessageBody() createConnectionDto: CreateConnectionDto,
+  ) {
+    const peer = await this.wrtcService.createConnection(
+      client,
+      createConnectionDto,
+    )
+    return peer
   }
 
   @SubscribeMessage('leave_room')
