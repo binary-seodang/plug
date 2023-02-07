@@ -1,4 +1,5 @@
 import { Injectable, NestMiddleware } from '@nestjs/common'
+import { RoleException } from 'auth/auth-exception.filter'
 import { NextFunction, Request, Response } from 'express'
 import { UsersService } from 'users/users.service'
 import { JwtService } from './jwt.service'
@@ -21,7 +22,9 @@ export class JwtMiddleware implements NestMiddleware {
           if (ok) {
             req['user'] = user
           }
-        } catch (e) {}
+        } catch (e) {
+          throw new RoleException()
+        }
       }
     }
     next()

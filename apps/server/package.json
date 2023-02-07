@@ -20,7 +20,6 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "db:push": "dotenv -e .env.development -- npx prisma db push",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -33,7 +32,6 @@
     "@nestjs/platform-socket.io": "^9.2.1",
     "@nestjs/swagger": "^6.1.4",
     "@nestjs/websockets": "^9.2.1",
-    "@prisma/client": "^4.9.0",
     "@socket.io/admin-ui": "^0.5.1",
     "@socket.io/redis-adapter": "^8.0.1",
     "@types/jsonwebtoken": "^9.0.1",
@@ -46,7 +44,8 @@
     "redis": "^4.6.4",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0",
-    "wrtc": "^0.4.7"
+    "wrtc": "^0.4.7",
+    "database" : "*"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.4.2",
@@ -70,7 +69,6 @@
     "joi": "^17.7.0",
     "lint-staged": "^13.1.0",
     "prettier": "^2.3.2",
-    "prisma": "^4.9.0",
     "run-script-webpack-plugin": "^0.1.1",
     "source-map-support": "^0.5.20",
     "supertest": "^6.1.3",

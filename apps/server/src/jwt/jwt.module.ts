@@ -7,15 +7,15 @@ import { JwtService } from './jwt.service'
 @Global()
 export class JwtModule {
   static forRoot(options: JwtModuleOptions): DynamicModule {
-    const { priveKey, pubkey } = options || {}
-    const key: Secret = priveKey
+    const { privKey, pubkey } = options || {}
+    const key: Secret = privKey
     const pub: Secret = pubkey
     return {
       module: JwtModule,
       providers: [
         {
           provide: JWT_PROVIDER,
-          useValue: { ...options, priveKey: key, pubkey: pub },
+          useValue: { ...options, privKey: key, pubkey: pub },
         },
         JwtService,
       ],

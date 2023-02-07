@@ -10,7 +10,8 @@
     "build": "turbo run build",
     "dev": "dotenv -e .env.development turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "db:push" : "dotenv -e .env.development turbo run db:push"
   },
   "devDependencies": {
     "prettier": "latest",
@@ -23,7 +24,7 @@
     "dotenv-cli": "^7.0.0"
   },
   "globalDependencies": [
-    ".env.*"
+    ".env.development"
 
   ],
   "packageManager": "yarn@1.22.19"
