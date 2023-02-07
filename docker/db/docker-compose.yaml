@@ -9,7 +9,7 @@ services:
       - "name=redis"
       - "mode=standalone"
     ports:
-      - 6379:6379
+      - 7000:6379
   postgres:
     image: postgres:latest
     restart: always

@@ -23,7 +23,12 @@ const Room = () => {
     onConnect(socket) {
       socket.listen('welcome', onRefreshRoomSetting)
       socket.listen('leave_room', onRefreshRoomSetting)
-      socket.emit('join_room', roomName, onRefreshRoomSetting)
+    },
+    onMounted(socket) {
+      if (socket.connected) {
+        socket.listen('welcome', onRefreshRoomSetting)
+        socket.listen('leave_room', onRefreshRoomSetting)
+      }
     },
     onUnmounted(socket) {
       socket.emit('leave_room', roomName)
@@ -89,6 +94,9 @@ const Room = () => {
       })
     },
   })
+  useEffect(() => {
+    socket.emit('join_room', roomName, onRefreshRoomSetting)
+  }, [])
   return (
     <div>
       {lastJoinedUser ? <h1>Welcome {lastJoinedUser} ! </h1> : null}
