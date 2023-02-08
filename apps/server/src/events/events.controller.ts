@@ -2,7 +2,8 @@ import { Controller, Get, OnModuleInit } from '@nestjs/common'
 import { ClientGrpc, Client, Transport } from '@nestjs/microservices'
 import { SFU } from './events.service'
 import { join } from 'path'
-import { Observable } from 'rxjs'
+import { promisify } from 'util'
+import { toPromise } from 'lib/fn'
 @Controller('event')
 export class EventsContoller implements OnModuleInit {
   @Client({
@@ -23,7 +24,17 @@ export class EventsContoller implements OnModuleInit {
 
   @Get()
   async test() {
-    console.log('CALL')
+    const test = await toPromise(
+      this.grpc.Call({
+        type: '123',
+        sessionId: '123',
+        sdp: '123',
+        candidate: '123',
+        channelId: '123',
+        fromSessionId: '123',
+      }),
+    )
+    console.log(test, 'TEST CALL')
     console.log('CALL')
     const r = await this.grpc
       .Call({
