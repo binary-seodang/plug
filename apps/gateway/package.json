@@ -1,0 +1,17 @@
+{
+  "name": "@plug/gateway",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "gateway:dev" : "mesh dev --port 4337"
+  },
+  "dependencies": {
+    "@graphql-mesh/cli": "^0.82.13",
+    "@graphql-mesh/graphql": "^0.33.10",
+    "graphql": "^16.6.0",
+    "@plug/server": "*",
+    "@plug/sfu": "*"
+  }
+}

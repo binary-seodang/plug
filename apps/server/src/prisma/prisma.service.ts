@@ -4,7 +4,7 @@ import {
   INestApplication,
   Logger,
 } from '@nestjs/common'
-import { Prisma, PrismaClient } from 'database'
+import { Prisma, PrismaClient } from '@plug/database'
 
 @Injectable()
 export class PrismaService

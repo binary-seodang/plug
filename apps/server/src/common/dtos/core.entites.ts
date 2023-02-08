@@ -1,9 +1,9 @@
-import { Field, ObjectType } from '@nestjs/graphql'
+import { Field, ObjectType, ID, Directive } from '@nestjs/graphql'
 import { IsNotEmpty, IsNumber, IsDate } from 'class-validator'
 
 @ObjectType()
 export class CoreDTO {
-  @Field(() => Number)
+  @Field(() => ID)
   @IsNotEmpty()
   @IsNumber()
   id: number

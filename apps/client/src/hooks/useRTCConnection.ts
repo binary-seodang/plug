@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 interface RTCConnection {
   isLoading: boolean
   stream: MediaStream | null
+  isError: boolean
 }
 
 interface RTCConnectionProps {
@@ -12,20 +13,23 @@ const useRTCConnection = ({ onConnect }: RTCConnectionProps = {}) => {
   const returnValue = useRef<RTCConnection>({
     isLoading: true,
     stream: null,
+    isError: false,
   })
   const getConenction = useCallback(async () => {
-    let stream = null
+    const mediaSource = {
+      ...returnValue.current,
+    }
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
+      mediaSource.stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
       })
-      onConnect && onConnect(stream)
+      onConnect && onConnect(mediaSource.stream)
     } catch (err) {
-      returnValue.current = {
-        stream,
-        isLoading: false,
-      }
+      mediaSource.isError = true
+    }
+    returnValue.current = {
+      ...mediaSource,
     }
   }, [])
 

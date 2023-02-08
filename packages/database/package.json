@@ -1,5 +1,5 @@
 {
-  "name" : "database",
+  "name" : "@plug/database",
   "version": "0.0.1",
   "main": "./index.js",
   "types": "./index.ts",

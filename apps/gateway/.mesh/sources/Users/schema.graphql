@@ -1,0 +1,49 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type User {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  nickname: String!
+  role: UserRole
+  sessionId: String
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+enum UserRole {
+  Admin
+  Client
+}
+
+type LoginOutput {
+  error: String
+  ok: Boolean!
+  token: String
+  user: User
+}
+
+type UserProfileOutput {
+  error: String
+  ok: Boolean!
+  user: User
+}
+
+type Query {
+  getUser(id: Float!): User!
+  getMe: UserProfileOutput!
+}
+
+type Mutation {
+  login(input: LoginInput!): LoginOutput!
+}
+
+input LoginInput {
+  nickname: String!
+}

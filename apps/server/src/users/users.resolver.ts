@@ -1,5 +1,11 @@
 import { UsersService } from 'users/users.service'
-import { Query, Mutation, Resolver, Args } from '@nestjs/graphql'
+import {
+  Query,
+  Mutation,
+  Resolver,
+  Args,
+  ResolveReference,
+} from '@nestjs/graphql'
 import { LoginInput, LoginOutput } from './dtos/login.dto'
 import { AuthUser } from 'auth/auth-user.decorator'
 import { User } from './entities/user.entity'
@@ -9,6 +15,19 @@ import { UserProfileOutput } from './dtos/user-profile.dto'
 @Resolver(() => User)
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
+
+  @ResolveReference()
+  async resolveReference(reference: {
+    __typename: string
+    id: number
+  }): Promise<User> {
+    return this.usersService.findById(reference.id).then((res) => res.user)
+  }
+
+  @Query(() => User)
+  async getUser(@Args('id') id: number): Promise<User> {
+    return this.usersService.findById(id).then((res) => res.user)
+  }
 
   @Query(() => UserProfileOutput)
   @Role(['Any'])

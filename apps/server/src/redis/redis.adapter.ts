@@ -42,7 +42,7 @@ export class RedisIoAdapter extends IoAdapter {
         },
       })
     } catch (err) {
-      console.log(err)
+      console.error(err)
     }
   }
 

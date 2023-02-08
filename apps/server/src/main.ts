@@ -23,7 +23,6 @@ async function bootstrap() {
     .build()
   const documnet = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('api', app, documnet)
-
   await app.listen(PORT, () => {
     new Logger().localInstance.log(`app listen on port : ${PORT}`)
   })

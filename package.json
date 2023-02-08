@@ -1,5 +1,5 @@
 {
-  "name": "plug-rtc",
+  "name": "plug",
   "version": "0.0.1",
   "private": true,
   "workspaces": [
@@ -11,7 +11,8 @@
     "dev": "dotenv -e .env.development turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "db:push" : "dotenv -e .env.development turbo run db:push"
+    "db:push" : "dotenv -e .env.development turbo run db:push",
+    "gateway:dev": "dotenv -e .env.development turbo run gateway:dev"
   },
   "devDependencies": {
     "prettier": "latest",
