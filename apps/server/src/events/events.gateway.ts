@@ -1,4 +1,4 @@
-import { GrpcMethod } from '@nestjs/microservices'
+import { Client, GrpcMethod, Transport } from '@nestjs/microservices'
 import { WrtcService } from 'wrtc/wrtc.service'
 import { WsExceptionFilter } from '../sockets/sockets-exception.filter'
 import { Inject, UseFilters, Logger, OnModuleInit } from '@nestjs/common'
@@ -23,6 +23,7 @@ import { instrument } from '@socket.io/admin-ui'
 import { GRPC_SERVICE } from 'common/common.constants'
 import { ClientGrpc } from '@nestjs/microservices'
 import { SFU } from './events.service'
+import { join } from 'path'
 
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
@@ -39,40 +40,40 @@ export class EventsGateway
     OnGatewayInit,
     OnModuleInit
 {
+  @Client({
+    transport: Transport.GRPC,
+    options: {
+      url: '0.0.0.0:50500',
+      package: 'sfu',
+      protoPath: join(__dirname, '../proto/sfu.proto'),
+    },
+  })
+  private readonly client1: ClientGrpc
+
   private readonly logger = new Logger(EventsGateway.name)
   private rpcService: SFU
   constructor(
     @Inject(PrismaService) private readonly prismaService: PrismaService,
-    @Inject(GRPC_SERVICE) private readonly grpcClient: ClientGrpc,
+    // @Inject(GRPC_SERVICE) private readonly grpcClient: ClientGrpc,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly wrtcService: WrtcService,
   ) {}
   onModuleInit() {
-    this.rpcService = this.grpcClient.getService('SFU')
+    this.rpcService = this.client1.getService('Sfu')
     // console.log(this.grpcClient.getClientByServiceName('SFU'))
-    console.log(this.rpcService)
-    setTimeout(() => {
-      this.rpcService.call({
-        type: '123',
-        sessionId: '123',
-        sdp: '123',
-        candidate: '123',
-        channelId: '123',
-        fromSessionId: '123',
-      })
-      console.log('O')
-    }, 300)
+    const call = this.rpcService.Call({
+      type: '123',
+      sessionId: '123',
+      sdp: '123',
+      candidate: '123',
+      channelId: '123',
+      fromSessionId: '123',
+    })
+    console.log(call)
   }
   @WebSocketServer() public io: Namespace
 
-  @GrpcMethod('SFU')
-  Call(param: any) {
-    console.log(param)
-    return {
-      ...param,
-    }
-  }
   @SubscribeMessage('set_nickname')
   async setNickname(
     @ConnectedSocket() client: AuthSocket,

@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package sfu;
 
-service Sfu {
-  rpc Call(Signal) returns (Signal) {}
+service SFU {
+  rpc call(Signal) returns (Signal) {}
   // rpc ClientIcecandidate(Signal) returns (Empty) {}
   // rpc ListenSignal(Empty) returns (stream Signal) {}
   // rpc Answer(Signal) returns (Empty) {}

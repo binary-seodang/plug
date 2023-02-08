@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package sfu;
 
-service SFU {
+service Sfu {
   rpc Call(Signal) returns (Signal) {}
   // rpc ClientIcecandidate(Signal) returns (Empty) {}
   // rpc ListenSignal(Empty) returns (stream Signal) {}
@@ -13,10 +13,10 @@ service SFU {
 message Signal {
   string type = 1; // offer, answer, icecandidate
   string sessionId = 2;
-  // string sdp = 3; // for offer / answer
-  // string candidate = 4; // for icecandidate
-  // string channelId = 5;
-  // string fromSessionId = 6;
+  string sdp = 3; // for offer / answer
+  string candidate = 4; // for icecandidate
+  string channelId = 5;
+  string fromSessionId = 6;
 }
 
 message LeaveParams {
