@@ -1,16 +1,20 @@
 {
   "name": "@plug/proto",
   "version": "1.0.0",
+  "types": "index.ts",
   "main": "index.js",
   "license": "MIT",
   "private": true,
   "scripts": {
-    "proto:w": "npx protoc --plugin=protoc-gen-ts_proto=.\\node_modules\\.bin\\protoc-gen-ts_proto.cmd --ts_proto_out=. ./simple.proto",
-    "proto:m": "npx protoc --plugin=protoc-gen-ts_proto=./node_modules/.bin/protoc-gen-ts_proto.cmd --ts_proto_out=. ./simple.proto"
+    "proto:types": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=types/ protos/plug.proto",
+    "proto:build" : "npx tsc index.ts"
   },
   "devDependencies": {
-    "protoc": "^1.1.3",
     "ts-proto": "^1.139.0"
-
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.8.8",
+    "@grpc/proto-loader": "^0.7.4",
+    "@types/google-protobuf": "^3.15.6"
   }
 }

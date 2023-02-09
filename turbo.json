@@ -12,6 +12,12 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**"]
     },
+    "proto:types" : {
+      "cache": false
+    },
+    "proto:build" : {
+      "cache": false
+    },
     "lint": {
       "outputs": []
     },

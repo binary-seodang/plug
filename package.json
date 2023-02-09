@@ -12,7 +12,9 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "db:push": "dotenv -e .env.development turbo run db:push",
-    "gateway:dev": "dotenv -e .env.development turbo run gateway:dev"
+    "gateway:dev": "dotenv -e .env.development turbo run gateway:dev",
+    "proto:types" : "turbo run proto:types",
+    "proto:build" : "turbo run proto:build"
   },
   "devDependencies": {
     "prettier": "latest",

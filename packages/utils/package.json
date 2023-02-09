@@ -2,7 +2,6 @@
   "name": "@plug/utils",
   "version": "1.0.0",
   "license": "MIT",
-  "type": "module",
   "main": "./index.js",
   "types": "./index.ts",
   "private": true,
