@@ -1,6 +1,8 @@
+import { PrismaModule } from 'prisma/prisma.module'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { SenderModule } from './sender/sender.module'
+import { GrpcModule } from './grpc/grpc.module'
 import joi from 'joi'
 
 @Module({
@@ -22,6 +24,8 @@ import joi from 'joi'
       }),
     }),
     SenderModule,
+    GrpcModule,
+    PrismaModule,
     // GraphQLModule.forRoot<ApolloDriverConfig>({
     //   driver: ApolloDriver,
     //   autoSchemaFile: true,

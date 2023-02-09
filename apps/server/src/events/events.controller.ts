@@ -2,8 +2,7 @@ import { Controller, Get, OnModuleInit } from '@nestjs/common'
 import { ClientGrpc, Client, Transport } from '@nestjs/microservices'
 import { SFU } from './events.service'
 import { join } from 'path'
-import { promisify } from 'util'
-import { toPromise } from 'lib/fn'
+import { toPromise } from '@plug/utils'
 @Controller('event')
 export class EventsContoller implements OnModuleInit {
   @Client({
@@ -34,19 +33,6 @@ export class EventsContoller implements OnModuleInit {
         fromSessionId: '123',
       }),
     )
-    console.log(test, 'TEST CALL')
-    console.log('CALL')
-    const r = await this.grpc
-      .Call({
-        type: '123',
-        sessionId: '123',
-        sdp: '123',
-        candidate: '123',
-        channelId: '123',
-        fromSessionId: '123',
-      })
-      .toPromise()
-    console.log(r)
-    return r
+    return test
   }
 }

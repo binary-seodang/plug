@@ -11,12 +11,12 @@
     "dev": "dotenv -e .env.development turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "db:push" : "dotenv -e .env.development turbo run db:push",
+    "db:push": "dotenv -e .env.development turbo run db:push",
     "gateway:dev": "dotenv -e .env.development turbo run gateway:dev"
   },
   "devDependencies": {
     "prettier": "latest",
-    "turbo": "latest"
+    "turbo": "^1.7.4"
   },
   "engines": {
     "node": ">=14.0.0"
@@ -26,7 +26,6 @@
   },
   "globalDependencies": [
     ".env.development"
-
   ],
   "packageManager": "yarn@1.22.19"
 }

@@ -33,7 +33,7 @@
     "@nestjs/graphql": "^10.1.7",
     "@nestjs/platform-socket.io": "^9.2.1",
     "@nestjs/websockets": "^9.2.1",
-    "@plug/database": "*",
+    "@plug/session": "*",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/socket.io": "^3.0.2",
     "@types/uuid": "^9.0.0",
@@ -45,7 +45,7 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0",
     "uuid": "^9.0.0",
-    "wrtc": "^0.4.7"
+    "wrtc": "^0.4.7"    
   },
   "devDependencies": {
     "@commitlint/cli": "^17.4.2",

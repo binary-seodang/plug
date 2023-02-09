@@ -16,14 +16,13 @@ import {
 import { Namespace, Socket, AuthSocket } from 'socket.io'
 import { PrismaService } from 'prisma/prisma.service'
 import { getServerRoomDto } from './dtos/gateway.dto'
-import { WSAuthMiddleware } from 'sockets/sockets.middleware'
+
 import { UsersService } from 'users/users.service'
 import { JwtService } from 'jwt/jwt.service'
-import { instrument } from '@socket.io/admin-ui'
-import { GRPC_SERVICE } from 'common/common.constants'
 import { ClientGrpc } from '@nestjs/microservices'
 import { SFU } from './events.service'
 import { join } from 'path'
+import { WSAuthMiddleware } from 'sockets/sockets.middleware'
 
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
@@ -54,23 +53,12 @@ export class EventsGateway
   private rpcService: SFU
   constructor(
     @Inject(PrismaService) private readonly prismaService: PrismaService,
-    // @Inject(GRPC_SERVICE) private readonly grpcClient: ClientGrpc,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly wrtcService: WrtcService,
   ) {}
   onModuleInit() {
     this.rpcService = this.client1.getService('Sfu')
-    // console.log(this.grpcClient.getClientByServiceName('SFU'))
-    const call = this.rpcService.Call({
-      type: '123',
-      sessionId: '123',
-      sdp: '123',
-      candidate: '123',
-      channelId: '123',
-      fromSessionId: '123',
-    })
-    console.log(call)
   }
   @WebSocketServer() public io: Namespace
 
