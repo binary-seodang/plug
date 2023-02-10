@@ -42,9 +42,9 @@ export class EventsGateway
   @Client({
     transport: Transport.GRPC,
     options: {
-      url: '0.0.0.0:50500',
-      package: 'sfu',
-      protoPath: join(__dirname, '../proto/sfu.proto'),
+      url: process.env.GRPC_URL,
+      package: process.env.GRPC_PACKAGE,
+      protoPath: join(__dirname, '../proto/plug.proto'),
     },
   })
   private readonly client1: ClientGrpc
@@ -58,7 +58,7 @@ export class EventsGateway
     private readonly wrtcService: WrtcService,
   ) {}
   onModuleInit() {
-    this.rpcService = this.client1.getService('Sfu')
+    this.rpcService = this.client1.getService('Plug')
   }
   @WebSocketServer() public io: Namespace
 

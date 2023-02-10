@@ -30,12 +30,13 @@ export class RedisIoAdapter extends IoAdapter {
         parser: {
           decode(msg) {
             const result: SubscribeMessage = JSON.parse(msg.toString())
-            console.log(result)
+            // console.log(result)
             const payload = result[1].data[1]
-            console.log(payload, ' << payload')
+
             return result
           },
           encode: (msg: (string | object)[]) => {
+            console.log(msg, '<<')
             const result = Buffer.from(JSON.stringify(msg))
             return result
           },

@@ -8,7 +8,7 @@ export class Sfu {
   constructor(private readonly prismaService: PrismaService) {}
 
   @UseInterceptors(GrpcInterceptor)
-  @GrpcMethod('Sfu', 'Call')
+  @GrpcMethod('Plug', 'Call')
   async Call(data: any, meta: Metadata) {
     console.log()
     // console.log(data, ',,,,,,,,,,,,,,,,,,,<<<<<<<<<<<<<<<<')

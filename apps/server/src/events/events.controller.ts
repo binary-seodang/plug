@@ -8,9 +8,9 @@ export class EventsContoller implements OnModuleInit {
   @Client({
     transport: Transport.GRPC,
     options: {
-      url: '0.0.0.0:50500',
-      package: 'sfu',
-      protoPath: join(__dirname, '../proto/sfu.proto'),
+      url: process.env.GRPC_URL,
+      package: process.env.GRPC_PACKAGE,
+      protoPath: join(__dirname, '../proto/plug.proto'),
     },
   })
   private readonly client1: ClientGrpc
@@ -18,7 +18,7 @@ export class EventsContoller implements OnModuleInit {
   private grpc: SFU
 
   onModuleInit() {
-    this.grpc = this.client1.getService('Sfu')
+    this.grpc = this.client1.getService('Plug')
   }
 
   @Get()

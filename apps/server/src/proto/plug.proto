@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package sfu;
+package plug;
 
-service Sfu {
+service Plug {
   rpc Call(Signal) returns (Signal) {}
   // rpc ClientIcecandidate(Signal) returns (Empty) {}
   // rpc ListenSignal(Empty) returns (stream Signal) {}
