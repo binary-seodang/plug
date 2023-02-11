@@ -1,9 +1,9 @@
-import { AuthSocket } from 'socket.io'
+import { Socket } from 'socket.io/dist/socket'
 import Connection from 'wrtc/connection/connection'
 import ConnectionManager from 'wrtc/connection/connection.manager'
 
 export default class Channel {
-  sockets = new Map<string, AuthSocket>()
+  sockets = new Map<string, Socket>()
   connections = new ConnectionManager()
 
   constructor(private id: string) {}
@@ -12,9 +12,9 @@ export default class Channel {
     return this.connections.getConnectionById(id)
   }
 
-  addConnection(client: AuthSocket, connection: Connection) {
+  addConnection(client: Socket, connection: Connection) {
     connection.channel = this
-    this.sockets.set(client.sessionId, client)
+    // this.sockets.set(client.sessionId!, client)
   }
 
   getConnectionsExcept(id: string) {

@@ -8,9 +8,5 @@ export class CreateConnectionDto {
 
   @Field(() => String)
   @IsString()
-  sdp: string
-
-  @Field(() => String)
-  @IsString()
   sessionId: string
 }

@@ -7,6 +7,7 @@ import { join } from 'path'
 async function bootstrap() {
   const logger = new Logger('INIT').localInstance
   try {
+    console.log(process.env.GRPC_PACKAGE)
     const GRPC = await NestFactory.createMicroservice(AppModule, {
       transport: Transport.GRPC,
       options: {
@@ -15,6 +16,7 @@ async function bootstrap() {
         protoPath: join(__dirname, './proto/plug.proto'),
       },
     })
+    GRPC.listen()
   } catch (err) {
     logger.error(err)
   }

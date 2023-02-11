@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "main": "./index.js",
   "types": "./index.ts",
+  "private" : true,
   "scripts": {
     "db:generate" : "prisma generate",
     "db:push" : "prisma db push",

@@ -18,7 +18,8 @@ export class EventsContoller implements OnModuleInit {
   private grpc: SFU
 
   onModuleInit() {
-    this.grpc = this.client1.getService('Plug')
+    // console.log(this.client1, ' <<<<')
+    // this.grpc = this.client1.getService('Plug')
   }
 
   @Get()

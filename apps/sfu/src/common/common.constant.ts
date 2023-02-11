@@ -1,0 +1,1 @@
+export const PUBSUB_MODULE = 'PUBSUB_MODULE'

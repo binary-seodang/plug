@@ -5,6 +5,7 @@ import { createAdapter } from '@socket.io/redis-adapter'
 import { createClient } from 'redis'
 import { INestApplication } from '@nestjs/common/interfaces'
 import { Server } from 'socket.io'
+import { Emitter } from '@socket.io/redis-emitter'
 
 export class RedisIoAdapter extends IoAdapter {
   private readonly configService: ConfigService
@@ -36,7 +37,6 @@ export class RedisIoAdapter extends IoAdapter {
             return result
           },
           encode: (msg: (string | object)[]) => {
-            console.log(msg, '<<')
             const result = Buffer.from(JSON.stringify(msg))
             return result
           },

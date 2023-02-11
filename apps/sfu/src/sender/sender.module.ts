@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common'
-import { Sfu } from './sender.controller'
+import { Plug } from './sender.controller'
 
 @Module({
-  controllers: [Sfu],
+  controllers: [Plug],
   providers: [],
   exports: [],
 })

@@ -1,4 +1,3 @@
-import { WrtcService } from 'wrtc/wrtc.service'
 import { JwtService } from 'jwt/jwt.service'
 import { UsersService } from 'users/users.service'
 import { WSAuthMiddleware } from 'sockets/sockets.middleware'
@@ -19,7 +18,8 @@ import { Namespace, Socket, AuthSocket } from 'socket.io'
 import { getServerRoomDto } from 'events/dtos/gateway.dto'
 
 import { WsExceptionFilter } from 'sockets/sockets-exception.filter'
-import { CreateConnectionDto } from 'wrtc/dtos/create-connection.dto'
+import { CreateConnectionDto } from './dtos/create-connection.dto'
+import { GrpcService } from 'grpc/grpc.service'
 
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
@@ -36,7 +36,7 @@ export class WorkspacesGateway
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly wrtcService: WrtcService,
+    private readonly grpcService: GrpcService,
   ) {}
   @WebSocketServer() public io: Namespace
 
@@ -49,25 +49,35 @@ export class WorkspacesGateway
     if (!nickname) {
       return { ok: false }
     }
+
+    const param: CreateConnectionDto = {
+      sessionId: client.user.sessionId,
+      channelId: roomName,
+    }
+    await this.grpcService.connect(param)
     client.join(roomName)
     const userList = await this.findJoinedUsers(roomName)
     client
       .to(roomName)
       .emit('welcome', { joinedUserNickname: nickname, userList, ok: true })
+    client.roomName = roomName
     this.serverRoomChange()
     return { joinedUserNickname: nickname, userList, ok: true }
   }
 
   @SubscribeMessage('stream')
   async onStream(
-    @ConnectedSocket() client: AuthSocket,
-    @MessageBody() createConnectionDto: CreateConnectionDto,
+    @ConnectedSocket() client: Socket,
+    @MessageBody() createConnectionDto: any,
   ) {
-    const peer = await this.wrtcService.createConnection(
-      client,
-      createConnectionDto,
-    )
-    return peer
+    console.log(client.roomName)
+    // console.log(createConnectionDto, '<<createConnectionDto')
+    this.grpcService.sendOffer({
+      channelId: client.roomName,
+      sdp: createConnectionDto.sdp,
+      sessionId: client.sessionId,
+    })
+    return '123'
   }
 
   @SubscribeMessage('leave_room')
@@ -111,7 +121,7 @@ export class WorkspacesGateway
   }
 
   handleConnection(@ConnectedSocket() client: Socket) {
-    this.logger.debug(`connected : ${client.id}`)
+    this.logger.debug(`connected : ${client.sessionId}`)
     this.logger.debug(`namespace : ${client.nsp.name}`)
     this.serverRoomChange()
   }

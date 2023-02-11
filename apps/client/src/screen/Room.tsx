@@ -60,6 +60,7 @@ const Room = () => {
       // peer.addEventListener('iceconnectionstatechange', (e) => {
       //   console.log(e)
       // })
+      console.log(socket)
       socket.on('icecandidate', (data) => {
         try {
           console.log(peer)
@@ -82,13 +83,13 @@ const Room = () => {
           {
             channelId: roomName,
             sdp: offer.sdp,
-            sessionId: socket.id,
+            sessionId: socket.sessionId,
           },
           (receivedOffer: RTCSessionDescriptionInit) => {
-            peer.setRemoteDescription({
-              type: 'answer',
-              sdp: receivedOffer.sdp,
-            })
+            // peer.setRemoteDescription({
+            //   type: 'answer',
+            //   sdp: receivedOffer.sdp,
+            // })
           },
         )
       })
