@@ -48,4 +48,15 @@ export class UsersService {
       return { ok: false, error }
     }
   }
+
+  async updateSession({ id, sessionId }: { id: number; sessionId: string }) {
+    return this.prismaService.user.update({
+      where: {
+        id,
+      },
+      data: {
+        sessionId,
+      },
+    })
+  }
 }

@@ -1,0 +1,17 @@
+{
+  "name" : "@plug/session",
+  "version": "0.0.1",
+  "main": "./index.js",
+  "types": "./index.ts",
+  "scripts": {
+    "db:generate" : "prisma generate",
+    "db:push" : "prisma db push",
+    "postdb:push" : "npx tsc index.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^4.9.0"
+  },
+  "devDependencies": {
+    "prisma": "^4.9.0"
+  }
+}

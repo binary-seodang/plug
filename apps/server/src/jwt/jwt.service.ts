@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common'
-import { JWT_PROVIDER } from 'src/common/common.constants'
+import { JWT_PROVIDER } from 'common/common.constants'
 import { JwtModuleOptions } from './jwt.interface'
 import jwt, { Algorithm } from 'jsonwebtoken'
 
@@ -12,7 +12,7 @@ export class JwtService {
     this.algorithm = this.options.isRSA ? 'RS256' : 'HS256'
   }
   sign<T>(payload: object | T | any) {
-    const token = jwt.sign(payload, this.options.priveKey, {
+    const token = jwt.sign(payload, this.options.privKey, {
       algorithm: this.algorithm,
     })
     return token
@@ -22,7 +22,7 @@ export class JwtService {
     try {
       return jwt.verify(
         token,
-        this.options.isRSA ? this.options.pubkey : this.options.priveKey,
+        this.options.isRSA ? this.options.pubkey : this.options.privKey,
         {
           algorithms: [this.algorithm],
         },

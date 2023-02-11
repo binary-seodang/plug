@@ -1,7 +1,7 @@
-import { WrtcService } from '../wrtc/wrtc.service'
-import { JwtService } from 'src/jwt/jwt.service'
-import { UsersService } from 'src/users/users.service'
-import { WSAuthMiddleware } from 'src/sockets/sockets.middleware'
+import { WrtcService } from 'wrtc/wrtc.service'
+import { JwtService } from 'jwt/jwt.service'
+import { UsersService } from 'users/users.service'
+import { WSAuthMiddleware } from 'sockets/sockets.middleware'
 import { UseFilters, Logger } from '@nestjs/common'
 import { WebSocketGateway } from '@nestjs/websockets'
 import {
@@ -16,9 +16,10 @@ import {
   OnGatewayInit,
 } from '@nestjs/websockets/interfaces'
 import { Namespace, Socket, AuthSocket } from 'socket.io'
-import { getServerRoomDto } from 'src/events/dtos/gateway.dto'
+import { getServerRoomDto } from 'events/dtos/gateway.dto'
 
-import { WsExceptionFilter } from 'src/sockets/sockets-exception.filter'
+import { WsExceptionFilter } from 'sockets/sockets-exception.filter'
+import { CreateConnectionDto } from 'wrtc/dtos/create-connection.dto'
 
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
@@ -58,10 +59,15 @@ export class WorkspacesGateway
   }
 
   @SubscribeMessage('stream')
-  onStream(@ConnectedSocket() client: AuthSocket, @MessageBody() stream: any) {
-    const peer = this.wrtcService.createConnection()
-    console.log(peer)
-    return
+  async onStream(
+    @ConnectedSocket() client: AuthSocket,
+    @MessageBody() createConnectionDto: CreateConnectionDto,
+  ) {
+    const peer = await this.wrtcService.createConnection(
+      client,
+      createConnectionDto,
+    )
+    return peer
   }
 
   @SubscribeMessage('leave_room')

@@ -1,5 +1,5 @@
 {
-  "name": "plug-rtc",
+  "name": "plug",
   "version": "0.0.1",
   "private": true,
   "workspaces": [
@@ -8,17 +8,26 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "dotenv -e .env.development turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "db:push": "dotenv -e .env.development turbo run db:push",
+    "gateway:dev": "dotenv -e .env.development turbo run gateway:dev",
+    "proto:types" : "turbo run proto:types",
+    "proto:build" : "turbo run proto:build"
   },
   "devDependencies": {
     "prettier": "latest",
-    "turbo": "latest"
+    "turbo": "^1.7.4"
   },
   "engines": {
     "node": ">=14.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "dotenv-cli": "^7.0.0"
+  },
+  "globalDependencies": [
+    ".env.development"
+  ],
   "packageManager": "yarn@1.22.19"
 }

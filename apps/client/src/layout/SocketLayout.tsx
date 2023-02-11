@@ -42,9 +42,11 @@ const SocketLayout = () => {
         navigate('/login')
       }
     },
+    onError(error) {
+      navigate('/login')
+    },
     fetchPolicy: 'no-cache',
   })
-
   const navigate = useNavigate()
 
   return <div>{loading ? 'loading...' : <Outlet />}</div>

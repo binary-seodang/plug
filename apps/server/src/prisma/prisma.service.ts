@@ -4,14 +4,14 @@ import {
   INestApplication,
   Logger,
 } from '@nestjs/common'
-import { Prisma, PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@plug/database'
 
 @Injectable()
 export class PrismaService
   extends PrismaClient<Prisma.PrismaClientOptions, 'query' | 'info' | 'error'>
   implements OnModuleInit
 {
-  private readonly logger
+  private readonly logger: Logger
   constructor() {
     super({
       log: [

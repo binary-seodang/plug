@@ -1,12 +1,9 @@
-import { Socket } from 'socket.io'
 import { SocketMiddleware } from 'common/common.type'
 import { JwtService } from 'jwt/jwt.service'
-import { User } from 'users/entities/user.entity'
+import { AuthSocket } from 'socket.io'
+import { v4 as uuid } from 'uuid'
 import { UsersService } from 'users/users.service'
 
-export class AuthSocket extends Socket {
-  user: User
-}
 export const WSAuthMiddleware = (
   jwtService: JwtService,
   userService: UsersService,
@@ -21,9 +18,20 @@ export const WSAuthMiddleware = (
       id: number
     }
     if (isValidated.id) {
-      const userResult = await userService.findById(isValidated.id)
-      if (userResult) {
-        socket.user = userResult.user
+      const { ok, user: existUser } = await userService.findById(isValidated.id)
+      if (ok) {
+        const { id, sessionId: existUserSessionId } = existUser
+        let sessionId = existUserSessionId
+        let user = existUser
+        if (!existUserSessionId) {
+          sessionId = uuid()
+          user = await userService.updateSession({
+            id,
+            sessionId,
+          })
+        }
+        socket.user = user
+        socket.sessionId = sessionId
         next()
       } else {
         next({

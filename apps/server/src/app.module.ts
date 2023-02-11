@@ -54,7 +54,7 @@ import { SocketsModule } from './sockets/sockets.module'
     WorkspacesModule,
     JwtModule.forRoot({
       isRSA: true,
-      priveKey: Buffer.from(process.env.JWT_PRIVATE_KEY, 'base64').toString(
+      privKey: Buffer.from(process.env.JWT_PRIVATE_KEY, 'base64').toString(
         'ascii',
       ),
       pubkey: Buffer.from(process.env.JWT_PUBLIC_KEY, 'base64').toString(

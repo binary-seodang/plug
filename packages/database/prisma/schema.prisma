@@ -13,6 +13,9 @@ model User {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   role      UserRole? @default(Client)
+  sessionId String?   @db.VarChar(36)
+
+  @@unique([nickname, sessionId])
 }
 
 enum UserRole {

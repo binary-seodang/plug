@@ -7,12 +7,12 @@ import { RoleException } from './auth-exception.filter'
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    private readonly relector: Reflector,
+    private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const roles = this.relector.get('roles', context.getHandler())
+    const roles = this.reflector.get('roles', context.getHandler())
     if (!roles) {
       return true
     }

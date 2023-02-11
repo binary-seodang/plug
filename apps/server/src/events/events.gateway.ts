@@ -1,5 +1,7 @@
+import { Client, GrpcMethod, Transport } from '@nestjs/microservices'
+import { WrtcService } from 'wrtc/wrtc.service'
 import { WsExceptionFilter } from '../sockets/sockets-exception.filter'
-import { Inject, UseFilters, Logger } from '@nestjs/common'
+import { Inject, UseFilters, Logger, OnModuleInit } from '@nestjs/common'
 import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
 import {
   ConnectedSocket,
@@ -14,10 +16,13 @@ import {
 import { Namespace, Socket, AuthSocket } from 'socket.io'
 import { PrismaService } from 'prisma/prisma.service'
 import { getServerRoomDto } from './dtos/gateway.dto'
-import { WSAuthMiddleware } from 'sockets/sockets.middleware'
+
 import { UsersService } from 'users/users.service'
 import { JwtService } from 'jwt/jwt.service'
-import { instrument } from '@socket.io/admin-ui'
+import { ClientGrpc } from '@nestjs/microservices'
+import { SFU } from './events.service'
+import { join } from 'path'
+import { WSAuthMiddleware } from 'sockets/sockets.middleware'
 
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
@@ -28,15 +33,33 @@ import { instrument } from '@socket.io/admin-ui'
   transports: ['websocket'],
 })
 export class EventsGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
+  implements
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    OnGatewayInit,
+    OnModuleInit
 {
+  @Client({
+    transport: Transport.GRPC,
+    options: {
+      url: process.env.GRPC_URL,
+      package: process.env.GRPC_PACKAGE,
+      protoPath: join(__dirname, '../proto/plug.proto'),
+    },
+  })
+  private readonly client1: ClientGrpc
+
   private readonly logger = new Logger(EventsGateway.name)
+  private rpcService: SFU
   constructor(
     @Inject(PrismaService) private readonly prismaService: PrismaService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly wrtcService: WrtcService,
   ) {}
-
+  onModuleInit() {
+    this.rpcService = this.client1.getService('Plug')
+  }
   @WebSocketServer() public io: Namespace
 
   @SubscribeMessage('set_nickname')
@@ -74,9 +97,11 @@ export class EventsGateway
   //   return roomName
   // }
 
-  handleConnection(@ConnectedSocket() client: Socket) {
+  handleConnection(@ConnectedSocket() client: AuthSocket) {
     this.logger.debug(`connected : ${client.id}`)
     this.logger.debug(`namespace : ${client.nsp.name}`)
+    this.wrtcService.addConnection(client.sessionId)
+
     this.serverRoomChange()
   }
 
@@ -86,10 +111,10 @@ export class EventsGateway
   }
 
   async afterInit(io: Namespace) {
-    instrument(io.server, {
-      auth: false,
-      mode: 'development',
-    })
+    // instrument(io.server, {
+    //   auth: false,
+    //   mode: 'development',
+    // })
     io.use(WSAuthMiddleware(this.jwtService, this.usersService))
     const serverCount = await io.server.sockets.adapter.serverCount()
     this.logger.log(`serverCount : ${serverCount}`)

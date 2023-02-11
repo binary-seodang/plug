@@ -16,15 +16,35 @@ export class RedisIoAdapter extends IoAdapter {
   private adapterConstructor: ReturnType<typeof createAdapter>
 
   async connectToRedis(): Promise<void> {
-    const pubClient = createClient({
-      url: this.configService.get('REDIS_HOST'),
-      password: this.configService.get('REDIS_PASSWORD'),
-    })
-    const subClient = pubClient.duplicate()
+    try {
+      const pubClient = createClient({
+        url: this.configService.get('REDIS_URL'),
+        password: this.configService.get('REDIS_PASSWORD'),
+      })
+      const subClient = pubClient.duplicate()
+      await Promise.all([pubClient.connect(), subClient.connect()])
 
-    await Promise.all([pubClient.connect(), subClient.connect()])
+      this.adapterConstructor = createAdapter(pubClient, subClient, {
+        key: 'plug-',
+        publishOnSpecificResponseChannel: true,
+        parser: {
+          decode(msg) {
+            const result: SubscribeMessage = JSON.parse(msg.toString())
+            // console.log(result)
+            const payload = result[1].data[1]
 
-    this.adapterConstructor = createAdapter(pubClient, subClient)
+            return result
+          },
+          encode: (msg: (string | object)[]) => {
+            console.log(msg, '<<')
+            const result = Buffer.from(JSON.stringify(msg))
+            return result
+          },
+        },
+      })
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   createIOServer(port: number, options?: ServerOptions): any {
@@ -32,17 +52,9 @@ export class RedisIoAdapter extends IoAdapter {
     server.adapter(this.adapterConstructor)
     return server
   }
-
-  // bindClientConnect(server: any, callback) {
-  //   // console.log(server)
-  //   console.log(callback())
-  //   // if (callback) {
-  //   //   callback()
-  //   // }
-  // }
-  // bindClientDisconnect(client: TClient, callback: Function): void;
-  // close(server: TServer): Promise<void>;
-  // dispose(): Promise<void>;
-  // abstract create(port: number, options?: TOptions): TServer;
-  // abstract bindMessageHandlers(client: TClient, handlers: WsMessageHandler[], transform: (data: any) => Observable<any>): any;
 }
+type SubscribeMessage = [
+  string,
+  { type: number; data: [string, [] | object]; nsp: string },
+  { rooms: string[]; except: string[]; flags: object },
+]

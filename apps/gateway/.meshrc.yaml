@@ -1,0 +1,7 @@
+sources:
+  - name: Users
+    handler:
+      graphql:
+        endpoint: http://localhost:4000/graphql
+        operationHeaders:
+          _plug-auth_: "{context.headers['_plug-auth_']}"
