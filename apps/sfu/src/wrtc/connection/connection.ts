@@ -1,3 +1,4 @@
+import { PubSubModule } from 'pubsub/pubsub.module'
 import { RTCPeerConnection, MediaStream, RTCIceCandidate } from 'wrtc'
 import Channel from 'wrtc/channel/Channel'
 // import getDispatchSignal from '../getDispatchSignal'
@@ -61,7 +62,7 @@ export default class Connection {
     // })
   }
 
-  async receiveCall(sdp: string, connection: Connection) {
+  async receiveCall(sdp: string) {
     const peer = new RTCPeerConnection(config)
     this.peerConnection = peer
 
@@ -74,15 +75,15 @@ export default class Connection {
       type: 'offer',
       sdp,
     })
-
     peer.addEventListener('icecandidate', (e) => {
-      const sock = this.channel.sockets.get(connection.id)
-      if (!e.candidate || !sock) return
+      if (!e.candidate) return
+
+      // candidate = e.candidate
       // ensures answer first!
-      sock.emit('icecandidate', {
-        sessionId: this.id,
-        candidate: e.candidate,
-      })
+      // sock.emit('icecandidate', {
+      //   sessionId: this.id,
+      //   candidate: e.candidate,
+      // })
       // setTimeout(() => {
       //   const dispatch = getDispatchSignal()
       //   dispatch({

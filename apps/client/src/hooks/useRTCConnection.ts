@@ -21,7 +21,7 @@ const useRTCConnection = ({ onConnect }: RTCConnectionProps = {}) => {
     }
     try {
       mediaSource.stream = await navigator.mediaDevices.getUserMedia({
-        video: false,
+        video: true,
         audio: true,
       })
       onConnect && onConnect(mediaSource.stream)

@@ -12,9 +12,8 @@ export default class Channel {
     return this.connections.getConnectionById(id)
   }
 
-  addConnection(client: Socket, connection: Connection) {
+  addConnection(connection: Connection) {
     connection.channel = this
-    // this.sockets.set(client.sessionId!, client)
   }
 
   getConnectionsExcept(id: string) {

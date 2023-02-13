@@ -16,7 +16,9 @@ export class Plug {
 
   @GrpcMethod('Plug', 'call')
   async Call(data: CreateConnectionDto, meta: Metadata) {
+    const channel = this.channelManager.getChannelById(data.channelId)
     const connection = this.connectionManager.getConnectionById(data.sessionId)
+    channel.addConnection(connection)
     const ok = await this.prismaService.session.upsert({
       where: {
         id: connection.id,
@@ -32,13 +34,21 @@ export class Plug {
         disabled: false,
       },
     })
-    console.log(ok, ' ok <')
+
     return data
   }
   @GrpcMethod('Plug', 'ClientIcecandidate')
-  async ClientIcecandidate(data: any) {
-    console.log(data, ' ClientIcecandidate')
+  async ClientIcecandidate(data: {
+    type: string
+    sessionId: string
+    sdp: string
+    channelId: string
+  }) {
+    const connection = this.connectionManager.getConnectionById(data.sessionId)
+    const answer = await connection.receiveCall(data.sdp)
 
-    return {}
+    // console.log(answer, ' ClientIcecandidate')
+
+    return { sessionId: connection.id, ...answer }
   }
 }
