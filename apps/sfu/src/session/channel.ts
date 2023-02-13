@@ -1,19 +1,13 @@
-import { Socket } from 'socket.io/dist/socket'
-import Connection from 'wrtc/connection/connection'
-import ConnectionManager from 'wrtc/connection/connection.manager'
+import { ConnectionManager } from './connection-manager.service'
+import { Connection } from './connection'
 
 export default class Channel {
-  sockets = new Map<string, Socket>()
   connections = new ConnectionManager()
 
-  constructor(private id: string) {}
-
-  getConnectionById(id: string) {
-    return this.connections.getConnectionById(id)
-  }
+  constructor(public id: string) {}
 
   addConnection(connection: Connection) {
-    connection.channel = this
+    connection.addChannel(this)
   }
 
   getConnectionsExcept(id: string) {

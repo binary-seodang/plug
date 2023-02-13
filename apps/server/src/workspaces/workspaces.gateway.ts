@@ -1,3 +1,4 @@
+import { redisClient } from './../redis/redis.adapter'
 import { JwtService } from 'jwt/jwt.service'
 import { UsersService } from 'users/users.service'
 import { WSAuthMiddleware } from 'sockets/sockets.middleware'
@@ -20,6 +21,8 @@ import { getServerRoomDto } from 'events/dtos/gateway.dto'
 import { WsExceptionFilter } from 'sockets/sockets-exception.filter'
 import { CreateConnectionDto } from './dtos/create-connection.dto'
 import { GrpcService } from 'grpc/grpc.service'
+import { GrpcMethod } from '@nestjs/microservices'
+import { createClient } from 'redis'
 
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
@@ -33,13 +36,13 @@ export class WorkspacesGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
   private readonly logger = new Logger(WorkspacesGateway.name)
+  private subscriber: redisClient
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly grpcService: GrpcService,
   ) {}
   @WebSocketServer() public io: Namespace
-
   @SubscribeMessage('join_room')
   async joinRoom(
     @ConnectedSocket() client: AuthSocket,
@@ -132,6 +135,15 @@ export class WorkspacesGateway
   }
 
   async afterInit(io: Namespace) {
+    this.subscriber = createClient({
+      url: process.env.REDIS_URL,
+      password: process.env.REDIS_PASSWORD,
+    })
+
+    await this.subscriber.connect()
+    this.subscriber.subscribe('icecandidate', (data) => {
+      console.log(JSON.parse(data))
+    })
     io.use(WSAuthMiddleware(this.jwtService, this.usersService))
     const serverCount = await io.server.sockets.adapter.serverCount()
     this.logger.log(`serverCount : ${serverCount}`)

@@ -1,12 +1,15 @@
-import Connection from './Connection'
+import { Injectable } from '@nestjs/common'
+import { Connection } from './Connection'
+import { Dispatch } from './types/actions'
 
-export default class ConnectionManager {
+@Injectable()
+export class ConnectionManager {
   connections = new Map<string, Connection>()
 
-  getConnectionById(id: string) {
+  getConnectionById(id: string, dispatch: Dispatch) {
     let connection = this.connections.get(id)
     if (!connection) {
-      connection = new Connection(id)
+      connection = new Connection(id, dispatch)
       this.connections.set(id, connection)
     }
     return connection

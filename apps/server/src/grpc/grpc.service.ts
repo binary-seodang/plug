@@ -32,21 +32,28 @@ export class GrpcService implements OnModuleInit {
   }
 
   async connect(param: ConnectDto) {
-    console.log('connect on')
-
-    const result = await toPromise(
-      this.grpc.call({ ...param, type: 'connection' }),
-    )
+    try {
+      const result = await toPromise(
+        this.grpc.call({ ...param, type: 'connection' }),
+      )
+      return result
+    } catch {
+      return true
+    }
   }
 
   async sendOffer(sendOfferDto: SendOffer) {
-    const result = await toPromise(
-      this.grpc.ClientIcecandidate({
-        type: 'offer',
-        ...sendOfferDto,
-      }),
-    )
+    try {
+      const result = await toPromise(
+        this.grpc.ClientIcecandidate({
+          type: 'offer',
+          ...sendOfferDto,
+        }),
+      )
+      return result
+    } catch (err) {
+      return
+    }
     // TODO : answer offer rpc 만들기
-    console.log(result)
   }
 }

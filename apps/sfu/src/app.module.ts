@@ -5,6 +5,7 @@ import { SenderModule } from './sender/sender.module'
 import { GrpcModule } from './grpc/grpc.module'
 import joi from 'joi'
 import { PubSubModule } from 'pubsub/pubsub.module'
+import { SessionModule } from 'session/session.module'
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { PubSubModule } from 'pubsub/pubsub.module'
     SenderModule,
     GrpcModule,
     PrismaModule,
+    SessionModule,
     PubSubModule.forRoot({
       url: process.env.REDIS_URL,
       password: '1234',

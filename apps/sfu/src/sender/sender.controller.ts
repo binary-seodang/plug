@@ -1,23 +1,36 @@
-import ConnectionManager from 'wrtc/connection/connection.manager'
-import ChannelManager from 'wrtc/channel/channel.manager'
 import { PrismaService } from 'prisma/prisma.service'
 import { GrpcInterceptor } from './../grpc/grpc.interceptor'
 import { Controller, UseInterceptors } from '@nestjs/common'
 import { GrpcMethod } from '@nestjs/microservices'
 import { Metadata } from '@grpc/grpc-js'
-import { CreateConnectionDto } from 'wrtc/dtos/create-connection.dto'
+
+import { Observable } from 'rxjs'
+import { Signal } from '@plug/proto'
+
+import { SessionService } from 'session/session.service'
+
+interface PlugGrpc {
+  Call(Signal: Signal): Observable<Signal>
+  call(Signal: Signal): Observable<Signal>
+  sendOffer(Signal: Signal): Observable<Signal>
+  ClientIcecandidate(Signal: Signal): Observable<object>
+  answer(Signal: Signal): Observable<null>
+}
+
 @Controller('sender')
 @UseInterceptors(GrpcInterceptor)
 export class Plug {
-  private readonly connectionManager = new ConnectionManager()
-  private readonly channelManager = new ChannelManager()
-
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly sessionService: SessionService,
+  ) {}
 
   @GrpcMethod('Plug', 'call')
-  async Call(data: CreateConnectionDto, meta: Metadata) {
-    const channel = this.channelManager.getChannelById(data.channelId)
-    const connection = this.connectionManager.getConnectionById(data.sessionId)
+  async Call(data: any) {
+    const { channel, connection } = this.sessionService.call(
+      data.channelId,
+      data.sessionId,
+    )
     channel.addConnection(connection)
     const ok = await this.prismaService.session.upsert({
       where: {
@@ -44,11 +57,8 @@ export class Plug {
     sdp: string
     channelId: string
   }) {
-    const connection = this.connectionManager.getConnectionById(data.sessionId)
-    const answer = await connection.receiveCall(data.sdp)
+    return this.sessionService.ClientIcecandidate(data)
 
-    // console.log(answer, ' ClientIcecandidate')
-
-    return { sessionId: connection.id, ...answer }
+    // return { sessionId: connection.id, ...answer }
   }
 }

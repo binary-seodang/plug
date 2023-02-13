@@ -9,7 +9,6 @@ const toPromise = async <T>(fn: Observable<T>) => {
       })
     })
   } catch (err) {
-    console.error(err)
     return {}
   }
 }

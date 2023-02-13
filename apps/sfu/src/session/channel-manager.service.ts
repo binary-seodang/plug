@@ -1,6 +1,8 @@
-import Channel from './Channel'
+import { Injectable } from '@nestjs/common'
+import Channel from 'session/channel'
 
-export default class ChannelManager {
+@Injectable()
+export class ChannelManager {
   channels = new Map<string, Channel>()
 
   getChannelById(id: string) {

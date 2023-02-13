@@ -1,7 +1,6 @@
-import { PubSubModule } from 'pubsub/pubsub.module'
 import { RTCPeerConnection, MediaStream, RTCIceCandidate } from 'wrtc'
-import Channel from 'wrtc/channel/Channel'
-// import getDispatchSignal from '../getDispatchSignal'
+import Channel from 'session/channel'
+import { Dispatch } from './types/actions'
 
 const config: RTCConfiguration = {
   iceServers: [
@@ -17,7 +16,7 @@ const config: RTCConfiguration = {
   ],
 }
 
-export default class Connection {
+export class Connection {
   channel: Channel | null = null
   peerConnection: RTCPeerConnection | null = null
   stream: MediaStream | null = null
@@ -25,7 +24,11 @@ export default class Connection {
   outputPeerCandidateQueue = new Map<string, RTCIceCandidate[]>()
   isConnected = false
 
-  constructor(public id: string) {}
+  constructor(public id: string, protected dispatch: Dispatch) {}
+
+  addChannel(channel: Channel) {
+    this.channel = channel
+  }
 
   async call(connection: Connection) {
     const { stream } = connection
@@ -36,14 +39,13 @@ export default class Connection {
     this.outputPeerConnections.set(connection.id, peer)
     peer.addEventListener('icecandidate', (e) => {
       if (!e.candidate) return
-      // const dispatch = getDispatchSignal()
 
-      // dispatch({
-      //   type: 'icecandidate',
-      //   sessionId: this.id,
-      //   candidate: JSON.stringify(e.candidate),
-      //   fromSessionId: connection.id,
-      // })
+      this.dispatch({
+        type: 'icecandidate',
+        sessionId: this.id,
+        candidate: JSON.stringify(e.candidate),
+        channelId: this.channel.id,
+      })
     })
 
     stream.getTracks().forEach((track) => {
@@ -51,15 +53,13 @@ export default class Connection {
     })
 
     const offer = await peer.createOffer()
-    // const dispatch = getDispatchSignal()
     peer.setLocalDescription(offer)
-
-    // dispatch({
-    //   type: 'offer',
-    //   sessionId: this.id,
-    //   fromSessionId: connection.id,
-    //   sdp: offer.sdp,
-    // })
+    this.dispatch({
+      type: 'offer',
+      sdp: offer.sdp,
+      sessionId: this.id,
+      channelId: this.channel.id,
+    })
   }
 
   async receiveCall(sdp: string) {
@@ -78,34 +78,26 @@ export default class Connection {
     peer.addEventListener('icecandidate', (e) => {
       if (!e.candidate) return
 
-      // candidate = e.candidate
-      // ensures answer first!
-      // sock.emit('icecandidate', {
-      //   sessionId: this.id,
-      //   candidate: e.candidate,
-      // })
-      // setTimeout(() => {
-      //   const dispatch = getDispatchSignal()
-      //   dispatch({
-      //     type: 'icecandidate',
-      //     sessionId: this.id,
-      //     candidate: JSON.stringify(e.candidate),
-      //   })
-      // }, 50)
+      setTimeout(() => {
+        if (this.dispatch) {
+          this.dispatch({
+            type: 'icecandidate',
+            sessionId: this.id,
+            channelId: this.channel.id,
+            candidate: JSON.stringify(e.candidate),
+          })
+        }
+      }, 50)
     })
 
-    peer.addEventListener('connectionstatechange', (e) => {
-      console.log(peer.connectionState, 'state')
+    peer.addEventListener('connectionstatechange', () => {
       if (peer.connectionState === 'connected' && !this.isConnected) {
         this.isConnected = true
         const connections = this.channel.getConnectionsExcept(this.id)
-        // (1) send other's stream to this peer
         connections.forEach((connection) => this.call(connection))
-        // (2) send this peer's stream to other users
         connections.forEach((connection) => connection.call(this))
       } else if (peer.connectionState === 'failed' && this.isConnected) {
         this.dispose()
-        // remove this connection from SFU
       }
     })
 
@@ -155,7 +147,6 @@ export default class Connection {
     } else {
       outputPeer.addIceCandidate(candidate)
     }
-    // if (!outputPeer) return
   }
 
   removeFromOutputConnections(id: string) {
