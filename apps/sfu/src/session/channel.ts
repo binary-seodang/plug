@@ -6,6 +6,9 @@ export default class Channel {
 
   constructor(public id: string) {}
 
+  getConnectionManager() {
+    return this.connections
+  }
   addConnection(connection: Connection) {
     connection.addChannel(this)
   }

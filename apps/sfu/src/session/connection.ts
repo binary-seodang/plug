@@ -32,6 +32,8 @@ export class Connection {
 
   async call(connection: Connection) {
     const { stream } = connection
+    console.log('??????????????????????????????????')
+    //
     if (!stream) return
 
     const peer = new RTCPeerConnection(config)
@@ -65,10 +67,12 @@ export class Connection {
   async receiveCall(sdp: string) {
     const peer = new RTCPeerConnection(config)
     this.peerConnection = peer
-
     peer.addEventListener('track', (e) => {
+      console.log(this.outputPeerConnections, ' << track')
       const stream = e.streams[0]
       this.stream = stream
+      stream.getTracks().forEach((stream) => console.log(stream))
+      // console.log(, 'get stream')
     })
 
     await peer.setRemoteDescription({
@@ -90,10 +94,18 @@ export class Connection {
       }, 50)
     })
 
-    peer.addEventListener('connectionstatechange', () => {
+    peer.addEventListener('connectionstatechange', (e) => {
+      console.log(
+        peer.connectionState,
+        'peer.connectionState',
+        this.isConnected,
+      )
       if (peer.connectionState === 'connected' && !this.isConnected) {
+        console.log(peer.connectionState === 'connected' && !this.isConnected)
         this.isConnected = true
+        console.log(this.channel)
         const connections = this.channel.getConnectionsExcept(this.id)
+        console.log(connections, 'connections')
         connections.forEach((connection) => this.call(connection))
         connections.forEach((connection) => connection.call(this))
       } else if (peer.connectionState === 'failed' && this.isConnected) {

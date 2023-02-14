@@ -14,7 +14,7 @@ async function bootstrap() {
   await redisIoAdapter.connectToRedis()
   app.useWebSocketAdapter(redisIoAdapter)
   app.useGlobalPipes(new ValidationPipe())
-
+  // ===
   app.setGlobalPrefix('api/v1')
   const config = new DocumentBuilder()
     .setTitle('Plug Api')
@@ -26,7 +26,6 @@ async function bootstrap() {
   await app.listen(PORT, () => {
     new Logger().localInstance.log(`app listen on port : ${PORT}`)
   })
-
   if (module.hot) {
     module.hot.accept()
     module.hot.dispose(() => app.close())

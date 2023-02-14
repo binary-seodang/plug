@@ -1,3 +1,4 @@
+import { Signal } from '@plug/proto'
 import { redisClient } from './../redis/redis.adapter'
 import { JwtService } from 'jwt/jwt.service'
 import { UsersService } from 'users/users.service'
@@ -53,11 +54,6 @@ export class WorkspacesGateway
       return { ok: false }
     }
 
-    const param: CreateConnectionDto = {
-      sessionId: client.user.sessionId,
-      channelId: roomName,
-    }
-    await this.grpcService.connect(param)
     client.join(roomName)
     const userList = await this.findJoinedUsers(roomName)
     client
@@ -71,16 +67,36 @@ export class WorkspacesGateway
   @SubscribeMessage('stream')
   async onStream(
     @ConnectedSocket() client: Socket,
-    @MessageBody() createConnectionDto: any,
+    @MessageBody() signal: Signal,
   ) {
-    console.log(client.roomName)
-    // console.log(createConnectionDto, '<<createConnectionDto')
-    this.grpcService.sendOffer({
-      channelId: client.roomName,
-      sdp: createConnectionDto.sdp,
+    const result = await this.grpcService.connect({
       sessionId: client.sessionId,
+      fromSessionId: client.sessionId,
+      candidate: '',
+      ...signal,
     })
-    return '123'
+    this.subscriber.subscribe('icecandidate', async (data) => {
+      const payload = JSON.parse(data)
+      this.io.server
+        .of('/workspace')
+        .in(payload.channelId)
+        .emit('icecandidate', payload.candidate)
+    })
+    return result
+  }
+
+  @SubscribeMessage('sender-cadidate')
+  async sendCandidate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any,
+  ) {
+    const candidate = JSON.stringify(data.candidate)
+    return this.grpcService.sendIce({
+      channelId: client.roomName,
+      sessionId: client.sessionId,
+      candidate,
+      fromSessionIdd: data.senderId,
+    })
   }
 
   @SubscribeMessage('leave_room')
@@ -141,9 +157,6 @@ export class WorkspacesGateway
     })
 
     await this.subscriber.connect()
-    this.subscriber.subscribe('icecandidate', (data) => {
-      console.log(JSON.parse(data))
-    })
     io.use(WSAuthMiddleware(this.jwtService, this.usersService))
     const serverCount = await io.server.sockets.adapter.serverCount()
     this.logger.log(`serverCount : ${serverCount}`)

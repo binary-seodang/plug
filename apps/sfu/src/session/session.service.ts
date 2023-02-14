@@ -1,3 +1,4 @@
+import { Signal } from '@plug/proto'
 import { ConnectionManager } from './connection-manager.service'
 import { Injectable } from '@nestjs/common'
 import { ChannelManager } from './channel-manager.service'
@@ -16,13 +17,17 @@ export class SessionService {
     return (args: dispatchArgs) => this.pubsubService.publish(args)
   }
 
-  call(channelId: string, sessionId: string) {
+  async call(signal: Signal) {
+    const { sessionId, sdp, channelId } = signal
     const channel = this.channelManager.getChannelById(channelId)
-    const connection = this.connectionManager.getConnectionById(
-      sessionId,
-      this.actionCreator(),
-    )
-    return { channel, connection }
+
+    const connection = channel
+      .getConnectionManager()
+      .getConnectionById(sessionId, this.actionCreator())
+    channel.addConnection(connection)
+    const answer = await connection.receiveCall(sdp)
+
+    return { answer, connection }
   }
 
   getConnection(sessionId: string) {
@@ -32,14 +37,26 @@ export class SessionService {
     )
   }
 
-  async ClientIcecandidate(data: {
-    type: string
-    sessionId: string
-    sdp: string
-    channelId: string
-  }) {
+  async ClientIcecandidate(signal: Signal) {
+    const { sessionId, candidate, fromSessionId } = signal
+    const connection = this.connectionManager.getConnectionById(
+      fromSessionId,
+      this.actionCreator(),
+    )
+    try {
+      const parsedCandidate = JSON.parse(candidate)
+      if (sessionId) {
+        connection?.addIceCandidateForOutputPeer(sessionId, parsedCandidate)
+      } else {
+        connection?.addIceCandidate(parsedCandidate)
+      }
+    } catch {}
+    return {}
+  }
+
+  addIce(data: any) {
     const connection = this.getConnection(data.sessionId)
-    const answer = await connection.receiveCall(data.sdp)
-    return { sessionId: connection.id, ...answer }
+    connection.addIceCandidate(JSON.parse(data.candidate))
+    return
   }
 }

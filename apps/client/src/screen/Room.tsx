@@ -2,7 +2,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { Welcome } from 'types/dtos/socketResponse.dto'
 import useSocket from 'hooks/useSocket'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import useRTCConnection from 'hooks/useRTCConnection'
 
 const Room = () => {
@@ -10,6 +10,7 @@ const Room = () => {
   const navigate = useNavigate()
   const [joinedUsers, setJoindUsers] = useState<[] | string[]>([])
   const [lastJoinedUser, setLastJoined] = useState<string | null>(null)
+  const myVideo = useRef<HTMLVideoElement>(null)
   const onRefreshRoomSetting = useCallback(({ ok, joinedUserNickname, userList }: Welcome) => {
     if (ok && userList) {
       if (joinedUserNickname) {
@@ -49,28 +50,28 @@ const Room = () => {
           },
         ],
       })
-      // peer.addEventListener('icecandidate', (e) => {
-      //   if (!(e.candidate && socket)) return
-      //   console.log('sender Cadidate')
-      //   socket.emit('sender-cadidate', {
-      //     candidate: e.candidate,
-      //     senderId: socket.id,
-      //   })
-      // })
-      // peer.addEventListener('iceconnectionstatechange', (e) => {
-      //   console.log(e)
-      // })
-      console.log(socket)
-      socket.on('icecandidate', (data) => {
+      peer.addEventListener('icecandidate', (e) => {
+        if (!(e.candidate && socket)) return
+        socket.emit('sender-cadidate', {
+          candidate: e.candidate,
+          senderId: socket.id,
+        })
+          })
+          peer.addEventListener('iceconnectionstatechange', (e) => {
+            console.log(e)
+          })
+          socket.on('icecandidate', (data) => {
         try {
-          console.log(peer)
-          peer.addIceCandidate(data.candidate)
+          const ice = JSON.parse(data)
+          peer.addIceCandidate(ice).catch((er) => {
+            console.log(er)
+          })
         } catch (e) {
           console.error(e)
         }
       })
       peer.addEventListener('track', (ev) => {
-        console.log(ev, 'track')
+        console.log('track added === ', ev)
       })
 
       stream.getTracks().forEach((track) => {
@@ -78,20 +79,24 @@ const Room = () => {
       })
       peer.createOffer().then((offer) => {
         peer.setLocalDescription(offer)
+
         socket.emit(
           'stream',
           {
             channelId: roomName,
+            type: offer.type,
             sdp: offer.sdp,
-            sessionId: socket.sessionId,
           },
           (receivedOffer: RTCSessionDescriptionInit) => {
-            // peer.setRemoteDescription({
-            //   type: 'answer',
-            //   sdp: receivedOffer.sdp,
-            // })
+            peer.setRemoteDescription({
+              type: 'answer',
+              sdp: receivedOffer.sdp,
+            })
           },
         )
+        if (myVideo.current) {
+          myVideo.current.srcObject = stream
+        }
       })
     },
   })
@@ -104,6 +109,10 @@ const Room = () => {
       {joinedUsers.map((item) => (
         <p key={item}>{item}</p>
       ))}
+
+      <video autoPlay ref={myVideo}>
+        <source />
+      </video>
     </div>
   )
 }
