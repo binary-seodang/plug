@@ -8,7 +8,7 @@ const packageDef = protoloader.loadSync(
 )
 
 const proto: ProtoGrpcType = grpc.loadPackageDefinition(packageDef) as any
-export * from "./types/sfu/Plug"
-export * from "./types/sfu/Signal"
+export * from "./types/plug/Plug"
+export * from "./types/plug/Signal"
 
 export default proto

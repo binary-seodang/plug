@@ -2,10 +2,22 @@ import { ConfigService } from '@nestjs/config'
 import { IoAdapter } from '@nestjs/platform-socket.io'
 import { ServerOptions } from 'socket.io'
 import { createAdapter } from '@socket.io/redis-adapter'
-import { createClient } from 'redis'
+import {
+  createClient,
+  RedisClientType,
+  RedisDefaultModules,
+  RedisFunctions,
+  RedisModules,
+  RedisScripts,
+} from 'redis'
 import { INestApplication } from '@nestjs/common/interfaces'
 import { Server } from 'socket.io'
 
+export type redisClient = RedisClientType<
+  RedisDefaultModules & RedisModules,
+  RedisFunctions,
+  RedisScripts
+>
 export class RedisIoAdapter extends IoAdapter {
   private readonly configService: ConfigService
 
@@ -15,7 +27,7 @@ export class RedisIoAdapter extends IoAdapter {
   }
   private adapterConstructor: ReturnType<typeof createAdapter>
 
-  async connectToRedis(): Promise<void> {
+  async connectToRedis(): Promise<redisClient> {
     try {
       const pubClient = createClient({
         url: this.configService.get('REDIS_URL'),
@@ -30,18 +42,16 @@ export class RedisIoAdapter extends IoAdapter {
         parser: {
           decode(msg) {
             const result: SubscribeMessage = JSON.parse(msg.toString())
-            // console.log(result)
             const payload = result[1].data[1]
-
             return result
           },
           encode: (msg: (string | object)[]) => {
-            console.log(msg, '<<')
             const result = Buffer.from(JSON.stringify(msg))
             return result
           },
         },
       })
+      return subClient
     } catch (err) {
       console.error(err)
     }

@@ -20,11 +20,11 @@ model Channel {
 }
 
 model Session {
-  id     String @id
-  userId String
-  state  String
-
-  user            User             @relation(fields: [userId], references: [id])
+  id              String           @id
+  // userId String
+  state           String
+  disabled        Boolean          @default(false)
+  // user            User             @relation(fields: [userId], references: [id])
   ChannelSessions ChannelSession[]
 }
 
@@ -37,12 +37,12 @@ model ChannelSession {
   session Session @relation(fields: [sessionId], references: [id])
 }
 
-model User {
-  id   String @id
-  json String
+// model User {
+//   id   String @id
+//   json String
 
-  Session Session[]
-}
+//   Session Session[]
+// }
 
 model SfuServer {
   id       Int       @id @default(autoincrement())

@@ -18,6 +18,7 @@ import { PrismaModule } from './prisma/prisma.module'
 import { UsersModule } from './users/users.module'
 import { AuthModule } from './auth/auth.module'
 import { SocketsModule } from './sockets/sockets.module'
+import { GrpcModule } from 'grpc/grpc.module'
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { SocketsModule } from './sockets/sockets.module'
     UsersModule,
     AuthModule,
     SocketsModule,
+    GrpcModule.forRoot(),
   ],
   controllers: [],
   providers: [],

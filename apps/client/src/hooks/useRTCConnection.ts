@@ -26,6 +26,7 @@ const useRTCConnection = ({ onConnect }: RTCConnectionProps = {}) => {
       })
       onConnect && onConnect(mediaSource.stream)
     } catch (err) {
+      console.log(err)
       mediaSource.isError = true
     }
     returnValue.current = {

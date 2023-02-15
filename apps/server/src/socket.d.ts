@@ -1,6 +1,11 @@
 import type { Socket as S, RemoteSocket as R } from 'socket.io'
 import { User } from './users/entities/user.entity'
 declare module 'socket.io' {
+  export class Socket {
+    user: User
+    sessionId: string
+    roomName?: string
+  }
   export class AuthSocket extends S {
     constructor() {
       super()

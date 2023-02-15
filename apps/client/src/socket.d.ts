@@ -12,6 +12,6 @@ declare module 'socket.io-client' {
       >,
     ): this
 
-    publicId: string
+    sessionId: string
   }
 }

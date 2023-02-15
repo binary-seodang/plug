@@ -3,10 +3,10 @@ syntax = "proto3";
 package plug;
 
 service Plug {
-  rpc Call(Signal) returns (Signal) {}
-  // rpc ClientIcecandidate(Signal) returns (Empty) {}
-  // rpc ListenSignal(Empty) returns (stream Signal) {}
-  // rpc Answer(Signal) returns (Empty) {}
+  rpc call(Signal) returns (Signal) {}
+  rpc ClientIcecandidate(Signal) returns (Empty) {}
+  rpc ListenSignal(Empty) returns (stream Signal) {}
+  rpc Answer(Signal) returns (Empty) {}
   rpc Leave(LeaveParams) returns (Empty) {}
 }
 

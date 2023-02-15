@@ -20,6 +20,6 @@ var path = require("path");
 // const protoPath = path.join(__dirname, "protos/plug.proto")
 var packageDef = protoloader.loadSync(path.join(__dirname, "protos/plug.proto"));
 var proto = grpc.loadPackageDefinition(packageDef);
-__exportStar(require("./types/sfu/Plug"), exports);
-__exportStar(require("./types/sfu/Signal"), exports);
+__exportStar(require("./types/plug/Plug"), exports);
+__exportStar(require("./types/plug/Signal"), exports);
 exports["default"] = proto;

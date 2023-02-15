@@ -1,10 +1,9 @@
 import { UsersModule } from '../users/users.module'
 import { Module } from '@nestjs/common'
 import { WorkspacesGateway } from './workspaces.gateway'
-import { WrtcModule } from 'wrtc/wrtc.module'
 
 @Module({
-  imports: [UsersModule, WrtcModule],
+  imports: [UsersModule],
   providers: [WorkspacesGateway],
 })
 export class WorkspacesModule {}
