@@ -29,13 +29,6 @@ export class GrpcController implements OnModuleInit {
       // console.log('OKKK', this.client, res)
     } catch (err) {
       console.log(err)
-      console.log(err)
     }
-  }
-
-  @MessagePattern('test')
-  test(@Payload() data: any[], @Ctx() context: RedisContext) {
-    console.log(data)
-    console.log(data)
   }
 }

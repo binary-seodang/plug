@@ -1,3 +1,4 @@
+import { LeaveParams } from './../../../../packages/proto/types/plug/LeaveParams'
 import { Injectable, UseInterceptors } from '@nestjs/common'
 import { Inject } from '@nestjs/common/decorators'
 import { OnModuleInit } from '@nestjs/common/interfaces'
@@ -22,6 +23,8 @@ interface PlugGrpc {
   sendOffer(Signal: Signal): Observable<Signal>
   ClientIcecandidate(Signal: Signal): Observable<object>
   Answer(Signal: Signal): Observable<null>
+  addIce(Signal: Signal): Observable<Signal>
+  Leave(Signal: LeaveParams): Observable<null>
 }
 
 @Injectable()
@@ -44,7 +47,6 @@ export class GrpcService implements OnModuleInit {
       return false
     }
   }
-
   async ClientIcecandidate(signal: Signal) {
     try {
       const result = await toPromise(
@@ -60,14 +62,20 @@ export class GrpcService implements OnModuleInit {
     // TODO : answer offer rpc 만들기
   }
 
-  async sendIce(data: any) {
+  async addIce(data: Signal) {
     try {
-      const result = await toPromise(
-        this.grpc.Answer({
-          type: 'Answer',
-          ...data,
-        }),
-      )
+      const result = await toPromise(this.grpc.Answer(data))
+      return result
+    } catch (err) {
+      return
+    }
+  }
+
+  async Leave(leaveParam: LeaveParams) {
+    console.log('LEAVE!!')
+    console.log('LEAVE!!')
+    try {
+      const result = await toPromise(this.grpc.Leave(leaveParam))
       return result
     } catch (err) {
       return

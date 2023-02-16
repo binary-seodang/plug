@@ -1,3 +1,4 @@
+import { LeaveParams } from './../../../../packages/proto/types/plug/LeaveParams'
 import { PrismaService } from 'prisma/prisma.service'
 import { GrpcInterceptor } from './../grpc/grpc.interceptor'
 import { Controller, UseInterceptors } from '@nestjs/common'
@@ -25,48 +26,44 @@ export class Plug {
     private readonly prismaService: PrismaService,
     private readonly sessionService: SessionService,
   ) {}
-
   @GrpcMethod('Plug', 'call')
   async Call(signal: Signal) {
     const { connection, answer } = await this.sessionService.call(signal)
-    const ok = await this.prismaService.session.upsert({
-      where: {
-        id: connection.id,
-      },
-      update: {
-        id: connection.id,
-        state: signal.type,
-        disabled: false,
-      },
-      create: {
-        id: connection.id,
-        state: signal.type,
-        disabled: false,
-      },
-    })
-
+    // const ok = await this.prismaService.session.upsert({
+    //   where: {
+    //     id: connection.id,
+    //   },
+    //   update: {
+    //     id: connection.id,
+    //     state: signal.type,
+    //     disabled: false,
+    //   },
+    //   create: {
+    //     id: connection.id,
+    //     state: signal.type,
+    //     disabled: false,
+    //   },
+    // })
     return { ...signal, sdp: answer.sdp, type: answer.type }
   }
   @GrpcMethod('Plug', 'ClientIcecandidate')
-  async ClientIcecandidate(data: {
-    type: string
-    sessionId: string
-    sdp: string
-    channelId: string
-    from: string
-  }) {
+  async ClientIcecandidate(data: Signal) {
     return this.sessionService.ClientIcecandidate(data)
 
     // return { sessionId: connection.id, ...answer }
   }
   @GrpcMethod('Plug', 'Answer')
-  async Answer(data: {
-    type: string
-    sessionId: string
-    sdp: string
-    channelId: string
-  }) {
+  async Answer(data: Signal) {
     return this.sessionService.addIce(data)
+    // return this.sessionService.ClientIcecandidate(data)
+
+    // return { sessionId: connection.id, ...answer }
+  }
+  @GrpcMethod('Plug', 'Leave')
+  async Leave(leaveParams: LeaveParams) {
+    console.log('LEAVE!')
+    this.sessionService.disconnect(leaveParams)
+    return {}
     // return this.sessionService.ClientIcecandidate(data)
 
     // return { sessionId: connection.id, ...answer }

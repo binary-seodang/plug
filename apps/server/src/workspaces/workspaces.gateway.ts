@@ -53,7 +53,6 @@ export class WorkspacesGateway
     if (!nickname) {
       return { ok: false }
     }
-
     client.join(roomName)
     const userList = await this.findJoinedUsers(roomName)
     client
@@ -64,38 +63,55 @@ export class WorkspacesGateway
     return { joinedUserNickname: nickname, userList, ok: true }
   }
 
-  @SubscribeMessage('stream')
+  @SubscribeMessage('offer')
   async onStream(
     @ConnectedSocket() client: Socket,
     @MessageBody() signal: Signal,
   ) {
-    const result = await this.grpcService.connect({
-      sessionId: client.sessionId,
-      fromSessionId: client.sessionId,
-      candidate: '',
-      ...signal,
-    })
-    this.subscriber.subscribe('icecandidate', async (data) => {
-      const payload = JSON.parse(data)
-      this.io.server
-        .of('/workspace')
-        .in(payload.channelId)
-        .emit('icecandidate', payload.candidate)
-    })
-    return result
+    try {
+      const result = await this.grpcService.connect({
+        sessionId: client.id,
+        fromSessionId: client.id,
+        candidate: '',
+        ...signal,
+      })
+
+      this.subscriber.subscribe('icecandidate', async (data) => {
+        const payload = JSON.parse(data)
+        // console.log(payload)
+        this.io.server
+          .of('/workspace')
+          .in(payload.channelId)
+          .emit('icecandidate', payload.candidate)
+      })
+      this.subscriber.subscribe('offer', (data) => {
+        const payload = JSON.parse(data)
+        this.io.server
+          .of('/workspace')
+          .in(payload.channelId)
+          .emit('offer', payload)
+      })
+      return result
+    } catch (err) {
+      return err
+    }
   }
 
-  @SubscribeMessage('sender-cadidate')
+  @SubscribeMessage('add-ice')
   async sendCandidate(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: any,
+    @MessageBody()
+    data: {
+      candidate: RTCIceCandidate
+      type: 'icecandidate'
+      channelId: string
+    },
   ) {
-    const candidate = JSON.stringify(data.candidate)
-    return this.grpcService.sendIce({
-      channelId: client.roomName,
-      sessionId: client.sessionId,
-      candidate,
-      fromSessionIdd: data.senderId,
+    return this.grpcService.addIce({
+      channelId: data.channelId,
+      sessionId: client.id,
+      candidate: JSON.stringify(data.candidate),
+      type: data.type,
     })
   }
 
@@ -109,16 +125,6 @@ export class WorkspacesGateway
     client.to(roomName).emit('leave_room', { userList, ok: true })
     this.serverRoomChange()
     return roomName
-  }
-
-  @SubscribeMessage('offer')
-  requestRTCOffer(
-    @ConnectedSocket() client: Socket,
-    // TODO : Offer Type assertion
-    @MessageBody('offer') offer: any,
-    @MessageBody('roomName') roomName: string,
-  ) {
-    client.to(roomName).emit('offer', offer)
   }
 
   @SubscribeMessage('answer')
@@ -140,13 +146,18 @@ export class WorkspacesGateway
   }
 
   handleConnection(@ConnectedSocket() client: Socket) {
-    this.logger.debug(`connected : ${client.sessionId}`)
+    this.logger.debug(`connected : ${client.id}`)
     this.logger.debug(`namespace : ${client.nsp.name}`)
     this.serverRoomChange()
   }
 
-  handleDisconnect(@ConnectedSocket() client: Socket) {
+  async handleDisconnect(@ConnectedSocket() client: Socket) {
     this.logger.log(`disconnected : ${client.id}`)
+    this.logger.log(`LEAVE : ${client.id}`)
+    await this.grpcService.Leave({
+      channelId: client.roomName,
+      sessionId: client.id,
+    })
     this.serverRoomChange()
   }
 

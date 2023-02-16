@@ -36,7 +36,7 @@ const Room = () => {
     },
   })
   const { isLoading, stream } = useRTCConnection({
-    onConnect(stream) {
+    async onConnect(stream) {
       const peer = new RTCPeerConnection({
         iceServers: [
           {
@@ -50,54 +50,56 @@ const Room = () => {
           },
         ],
       })
-      peer.addEventListener('icecandidate', (e) => {
-        if (!(e.candidate && socket)) return
-        socket.emit('sender-cadidate', {
-          candidate: e.candidate,
-          senderId: socket.id,
-        })
-          })
-          peer.addEventListener('iceconnectionstatechange', (e) => {
+
+      stream.getTracks().forEach((track) => peer.addTrack(track, stream))
+
+      peer.addEventListener('connectionstatechange', (e) => {
+        console.log(e, '<< == connectionstatechange')
+        console.log(peer.connectionState, '<< == connectionstatechange')
+      })
+
+      const offer = await peer.createOffer()
+      await peer.setLocalDescription(offer)
+      socket.emit(
+        'offer',
+        { sdp: offer.sdp, type: offer.type, channelId: roomName },
+        async (data) => {
+          await peer.setRemoteDescription({ type: data.type, sdp: data.sdp })
+          peer.addEventListener('icecandidate', async (e) => {
             console.log(e)
-          })
-          socket.on('icecandidate', (data) => {
-        try {
-          const ice = JSON.parse(data)
-          peer.addIceCandidate(ice).catch((er) => {
-            console.log(er)
-          })
-        } catch (e) {
-          console.error(e)
-        }
-      })
-      peer.addEventListener('track', (ev) => {
-        console.log('track added === ', ev)
-      })
+            if (!e.candidate) return
+            console.log(e)
+            socket.emit('add-ice', { candidate: e.candidate, type: e.type, channelId: roomName })
+            socket.listen('icecandidate', (data) => {
+              const payload: RTCIceCandidate = JSON.parse(data)
+              peer.addIceCandidate(payload)
 
-      stream.getTracks().forEach((track) => {
-        peer.addTrack(track, stream)
-      })
-      peer.createOffer().then((offer) => {
-        peer.setLocalDescription(offer)
-
-        socket.emit(
-          'stream',
-          {
-            channelId: roomName,
-            type: offer.type,
-            sdp: offer.sdp,
-          },
-          (receivedOffer: RTCSessionDescriptionInit) => {
-            peer.setRemoteDescription({
-              type: 'answer',
-              sdp: receivedOffer.sdp,
+              // socket.listen('offer', async (data) => {
+              // await peer.setRemoteDescription(data.sdp)
+              // const answer = await peer.createAnswer()
+              // await peer.setLocalDescription(answer)
+              // })
             })
-          },
-        )
-        if (myVideo.current) {
-          myVideo.current.srcObject = stream
-        }
-      })
+          })
+          // peer.addEventListener('icecandidate', async (e) => {
+          //   if (!e.candidate) return
+          //   socket.emit('add-ice', { candidate: e.candidate, type: e.type, channelId: roomName })
+          //   socket.on('icecandidate', (data) => {
+          //     const payload: RTCIceCandidate = JSON.parse(data)
+          //     peer.addIceCandidate(payload)
+          //     peer.addEventListener('track', (e) => {
+          //       console.log(e)
+          //     })
+
+          //     // socket.on('offer', async (data) => {
+          //     //   await peer.setRemoteDescription(data.sdp)
+          //     //   // const answer = await peer.createAnswer()
+          //     //   // await peer.setLocalDescription(answer)
+          //     // })
+          //   })
+          // })
+        },
+      )
     },
   })
   useEffect(() => {
@@ -110,7 +112,7 @@ const Room = () => {
         <p key={item}>{item}</p>
       ))}
 
-      <video autoPlay ref={myVideo}>
+      <video ref={myVideo}>
         <source />
       </video>
     </div>
