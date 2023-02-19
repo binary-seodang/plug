@@ -1,4 +1,4 @@
-import { LeaveParams } from './../../../../packages/proto/types/plug/LeaveParams'
+import type { LeaveParams } from '@plug/proto/types/plug/LeaveParams'
 import { Signal } from '@plug/proto'
 import { ConnectionManager } from './connection-manager.service'
 import { Injectable } from '@nestjs/common'

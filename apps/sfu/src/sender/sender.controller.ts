@@ -1,4 +1,4 @@
-import { LeaveParams } from './../../../../packages/proto/types/plug/LeaveParams'
+import type { LeaveParams } from '@plug/proto/types/plug/LeaveParams'
 import { PrismaService } from 'prisma/prisma.service'
 import { GrpcInterceptor } from './../grpc/grpc.interceptor'
 import { Controller, UseInterceptors } from '@nestjs/common'
@@ -28,6 +28,7 @@ export class Plug {
   ) {}
   @GrpcMethod('Plug', 'call')
   async Call(signal: Signal) {
+    console.log(signal, 'sender calll << ')
     const { connection, answer } = await this.sessionService.call(signal)
     // const ok = await this.prismaService.session.upsert({
     //   where: {
@@ -44,6 +45,11 @@ export class Plug {
     //     disabled: false,
     //   },
     // })
+    //
+    console.log(
+      { ...signal, sdp: answer.sdp, type: answer.type },
+      'return sender  call????? ',
+    )
     return { ...signal, sdp: answer.sdp, type: answer.type }
   }
   @GrpcMethod('Plug', 'ClientIcecandidate')
@@ -61,7 +67,6 @@ export class Plug {
   }
   @GrpcMethod('Plug', 'Leave')
   async Leave(leaveParams: LeaveParams) {
-    console.log('LEAVE!')
     this.sessionService.disconnect(leaveParams)
     return {}
     // return this.sessionService.ClientIcecandidate(data)

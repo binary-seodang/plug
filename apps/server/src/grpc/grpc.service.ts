@@ -1,4 +1,3 @@
-import { LeaveParams } from './../../../../packages/proto/types/plug/LeaveParams'
 import { Injectable, UseInterceptors } from '@nestjs/common'
 import { Inject } from '@nestjs/common/decorators'
 import { OnModuleInit } from '@nestjs/common/interfaces'
@@ -7,6 +6,7 @@ import { toPromise } from '@plug/utils'
 import { GRPC_CLIENT } from 'common/common.constants'
 import { Observable } from 'rxjs'
 import { Signal } from '@plug/proto'
+import type { LeaveParams } from '@plug/proto/types/plug/LeaveParams'
 import { GrpcInterceptor } from './grpc.interceptor'
 interface ConnectDto {
   sessionId: string
@@ -39,13 +39,13 @@ export class GrpcService implements OnModuleInit {
 
   async connect(param: Signal) {
     try {
-      const result = await toPromise(
-        this.grpc.call({ ...param, type: 'connection' }),
-      )
-      return result
+      const result = await toPromise(this.grpc.call(param))
+      console.log(result, '<<< result')
+      return {}
     } catch {
       return false
     }
+    //{ ...signal, sdp: answer.sdp, type: answer.type }
   }
   async ClientIcecandidate(signal: Signal) {
     try {
@@ -72,13 +72,13 @@ export class GrpcService implements OnModuleInit {
   }
 
   async Leave(leaveParam: LeaveParams) {
-    console.log('LEAVE!!')
-    console.log('LEAVE!!')
-    try {
-      const result = await toPromise(this.grpc.Leave(leaveParam))
-      return result
-    } catch (err) {
-      return
-    }
+    console.log(leaveParam, 'leaveParam')
+    //   try {
+    //     const result = await toPromise(this.grpc.Leave(leaveParam))
+    //     return result
+    //   } catch (err) {
+    //     return
+    //   }
+    // }
   }
 }

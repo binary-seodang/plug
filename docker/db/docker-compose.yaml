@@ -9,12 +9,12 @@ services:
       - "name=redis"
       - "mode=standalone"
     ports:
-      - 7000:6379
+      - 6080:6379
   postgres:
     image: postgres:latest
     restart: always
     ports:
-      - "5432:5432"
+      - "5400:5432"
     environment:
       POSTGRES_USER: PLUG
       POSTGRES_PASSWORD: 1234

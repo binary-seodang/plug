@@ -18,13 +18,9 @@ import {
 } from '@nestjs/websockets/interfaces'
 import { Namespace, Socket, AuthSocket } from 'socket.io'
 import { getServerRoomDto } from 'events/dtos/gateway.dto'
-
 import { WsExceptionFilter } from 'sockets/sockets-exception.filter'
-import { CreateConnectionDto } from './dtos/create-connection.dto'
 import { GrpcService } from 'grpc/grpc.service'
-import { GrpcMethod } from '@nestjs/microservices'
 import { createClient } from 'redis'
-
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
   cors: {
@@ -36,6 +32,7 @@ import { createClient } from 'redis'
 export class WorkspacesGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
+  //
   private readonly logger = new Logger(WorkspacesGateway.name)
   private subscriber: redisClient
   constructor(
@@ -154,10 +151,10 @@ export class WorkspacesGateway
   async handleDisconnect(@ConnectedSocket() client: Socket) {
     this.logger.log(`disconnected : ${client.id}`)
     this.logger.log(`LEAVE : ${client.id}`)
-    await this.grpcService.Leave({
-      channelId: client.roomName,
-      sessionId: client.id,
-    })
+    // await this.grpcService.Leave({
+    //   channelId: client.roomName,
+    //   sessionId: client.id,
+    // })
     this.serverRoomChange()
   }
 

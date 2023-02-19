@@ -2,10 +2,10 @@ import { PrismaModule } from 'prisma/prisma.module'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { SenderModule } from './sender/sender.module'
-import { GrpcModule } from './grpc/grpc.module'
 import joi from 'joi'
 import { PubSubModule } from 'pubsub/pubsub.module'
 import { SessionModule } from 'session/session.module'
+import { GrpcModule } from 'grpc/grpc.module'
 
 @Module({
   imports: [
@@ -32,7 +32,7 @@ import { SessionModule } from 'session/session.module'
     SessionModule,
     PubSubModule.forRoot({
       url: process.env.REDIS_URL,
-      password: '1234',
+      // password: '1234',
     }),
     // GraphQLModule.forRoot<ApolloDriverConfig>({
     //   driver: ApolloDriver,
