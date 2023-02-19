@@ -3,7 +3,7 @@ import { redisClient } from './../redis/redis.adapter'
 import { JwtService } from 'jwt/jwt.service'
 import { UsersService } from 'users/users.service'
 import { WSAuthMiddleware } from 'sockets/sockets.middleware'
-import { UseFilters, Logger } from '@nestjs/common'
+import { UseFilters, Logger, UseInterceptors } from '@nestjs/common'
 import { WebSocketGateway } from '@nestjs/websockets'
 import {
   ConnectedSocket,
@@ -21,7 +21,11 @@ import { getServerRoomDto } from 'events/dtos/gateway.dto'
 import { WsExceptionFilter } from 'sockets/sockets-exception.filter'
 import { GrpcService } from 'grpc/grpc.service'
 import { createClient } from 'redis'
+import { GrpcInterceptor } from 'grpc/grpc.interceptor'
+import { ExceptionFilter } from 'grpc/grpc.filter'
 @UseFilters(new WsExceptionFilter())
+@UseFilters(new ExceptionFilter())
+@UseInterceptors(GrpcInterceptor)
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -75,7 +79,6 @@ export class WorkspacesGateway
 
       this.subscriber.subscribe('icecandidate', async (data) => {
         const payload = JSON.parse(data)
-        // console.log(payload)
         this.io.server
           .of('/workspace')
           .in(payload.channelId)
@@ -117,6 +120,11 @@ export class WorkspacesGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() roomName: string,
   ) {
+    console.log('leave :  ', { channelId: roomName, sessionId: client.id })
+    await this.grpcService.Leave({
+      channelId: roomName,
+      sessionId: client.id,
+    })
     await client.leave(roomName)
     const userList = await this.findJoinedUsers(roomName)
     client.to(roomName).emit('leave_room', { userList, ok: true })
@@ -150,14 +158,10 @@ export class WorkspacesGateway
 
   async handleDisconnect(@ConnectedSocket() client: Socket) {
     this.logger.log(`disconnected : ${client.id}`)
-    this.logger.log(`LEAVE : ${client.id}`)
-    // await this.grpcService.Leave({
-    //   channelId: client.roomName,
-    //   sessionId: client.id,
-    // })
+
     this.serverRoomChange()
   }
-
+  //
   async afterInit(io: Namespace) {
     this.subscriber = createClient({
       url: process.env.REDIS_URL,
@@ -191,3 +195,4 @@ export class WorkspacesGateway
     return AllRooms
   }
 }
+//

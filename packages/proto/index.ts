@@ -10,5 +10,6 @@ const packageDef = protoloader.loadSync(
 const proto: ProtoGrpcType = grpc.loadPackageDefinition(packageDef) as any
 export * from "./types/plug/Plug"
 export * from "./types/plug/Signal"
+export * from "./types/plug/LeaveParams"
 
 export default proto

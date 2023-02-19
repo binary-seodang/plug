@@ -45,7 +45,7 @@ export class SessionService {
       if (sessionId) {
         connection?.addIceCandidateForOutputPeer(sessionId, parsedCandidate)
       } else {
-        connection?.addIceCandidate(parsedCandidate)
+        connection.addIceCandidate(parsedCandidate)
       }
     } catch {}
     return {}

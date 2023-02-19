@@ -32,8 +32,6 @@ export class Connection {
 
   async call(connection: Connection) {
     const { stream } = connection
-    console.log(stream, 'stream')
-    //
     if (!stream) return
 
     const peer = new RTCPeerConnection(config)
@@ -68,9 +66,7 @@ export class Connection {
   }
 
   async receiveCall(sdp: string) {
-    console.log('receiveCall <<<<< ')
     const peer = new RTCPeerConnection(config)
-    console.log('create Peer >> ', peer)
     this.peerConnection = peer
     peer.addEventListener('track', (e) => {
       const stream = e.streams[0]
@@ -109,7 +105,6 @@ export class Connection {
     })
     const answer = await peer.createAnswer()
     await peer.setLocalDescription(answer)
-    console.log(answer, 'receivecall')
     return answer
   }
 

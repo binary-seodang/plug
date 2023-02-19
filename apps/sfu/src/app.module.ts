@@ -32,7 +32,7 @@ import { GrpcModule } from 'grpc/grpc.module'
     SessionModule,
     PubSubModule.forRoot({
       url: process.env.REDIS_URL,
-      // password: '1234',
+      password: '1234',
     }),
     // GraphQLModule.forRoot<ApolloDriverConfig>({
     //   driver: ApolloDriver,

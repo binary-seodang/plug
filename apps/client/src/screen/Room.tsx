@@ -64,7 +64,13 @@ const Room = () => {
         'offer',
         { sdp: offer.sdp, type: offer.type, channelId: roomName },
         async (data) => {
-          await peer.setRemoteDescription({ type: data.type, sdp: data.sdp })
+          console.log(data)
+          await peer.setRemoteDescription(
+            new RTCSessionDescription({
+              type: data.type,
+              sdp: data.sdp,
+            }),
+          )
           peer.addEventListener('icecandidate', async (e) => {
             console.log(e)
             if (!e.candidate) return

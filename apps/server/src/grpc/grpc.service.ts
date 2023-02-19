@@ -5,17 +5,9 @@ import { ClientGrpcProxy } from '@nestjs/microservices'
 import { toPromise } from '@plug/utils'
 import { GRPC_CLIENT } from 'common/common.constants'
 import { Observable } from 'rxjs'
-import { Signal } from '@plug/proto'
-import type { LeaveParams } from '@plug/proto/types/plug/LeaveParams'
+import { Signal, LeaveParams } from '@plug/proto'
 import { GrpcInterceptor } from './grpc.interceptor'
-interface ConnectDto {
-  sessionId: string
-  channelId: string
-}
-
-interface SendOffer extends ConnectDto {
-  sdp: string
-}
+import { Metadata } from '@grpc/grpc-js'
 
 interface PlugGrpc {
   Call(Signal: Signal): Observable<Signal>
@@ -24,7 +16,8 @@ interface PlugGrpc {
   ClientIcecandidate(Signal: Signal): Observable<object>
   Answer(Signal: Signal): Observable<null>
   addIce(Signal: Signal): Observable<Signal>
-  Leave(Signal: LeaveParams): Observable<null>
+  Exit(Signal: LeaveParams)
+  leave(Signal: LeaveParams): Observable<LeaveParams>
 }
 
 @Injectable()
@@ -39,23 +32,19 @@ export class GrpcService implements OnModuleInit {
 
   async connect(param: Signal) {
     try {
-      const result = await toPromise(this.grpc.call(param))
-      console.log(result, '<<< result')
-      return {}
+      return toPromise(this.grpc.call(param))
     } catch {
       return false
     }
-    //{ ...signal, sdp: answer.sdp, type: answer.type }
   }
   async ClientIcecandidate(signal: Signal) {
     try {
-      const result = await toPromise(
+      return toPromise(
         this.grpc.ClientIcecandidate({
           type: 'offer',
           ...signal,
         }),
       )
-      return result
     } catch (err) {
       return
     }
@@ -64,21 +53,20 @@ export class GrpcService implements OnModuleInit {
 
   async addIce(data: Signal) {
     try {
-      const result = await toPromise(this.grpc.Answer(data))
-      return result
+      return toPromise(this.grpc.Answer(data))
     } catch (err) {
       return
     }
   }
 
   async Leave(leaveParam: LeaveParams) {
-    console.log(leaveParam, 'leaveParam')
-    //   try {
-    //     const result = await toPromise(this.grpc.Leave(leaveParam))
-    //     return result
-    //   } catch (err) {
-    //     return
-    //   }
-    // }
+    try {
+      const meta = new Metadata()
+      meta.add('test', '123')
+      console.log(meta)
+      return this.grpc.Exit(leaveParam)
+    } catch (err) {
+      return
+    }
   }
 }
