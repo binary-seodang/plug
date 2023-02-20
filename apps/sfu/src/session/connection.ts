@@ -37,12 +37,11 @@ export class Connection {
     const peer = new RTCPeerConnection(config)
 
     this.outputPeerConnections.set(connection.id, peer)
-    // console.log(this.outputPeerConnections.get(connection.id))
     peer.addEventListener('icecandidate', (e) => {
       if (!e.candidate) return
 
       this.dispatch({
-        type: 'icecandidate',
+        type: 'client-icecandidate',
         sessionId: this.id,
         candidate: JSON.stringify(e.candidate),
         channelId: this.channel.id,
@@ -64,7 +63,7 @@ export class Connection {
       })
     }
   }
-
+  //
   async receiveCall(sdp: string) {
     const peer = new RTCPeerConnection(config)
     this.peerConnection = peer
@@ -93,6 +92,8 @@ export class Connection {
       if (peer.connectionState === 'connected' && !this.isConnected) {
         this.isConnected = true
         const connections = this.channel.getConnectionsExcept(this.id)
+        console.log(connections.length)
+        console.log(connections, '<<< connections')
         connections.forEach((connection) => this.call(connection))
         connections.forEach((connection) => connection.call(this))
       } else if (peer.connectionState === 'failed' && this.isConnected) {

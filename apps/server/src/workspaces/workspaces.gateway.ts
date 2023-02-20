@@ -82,7 +82,7 @@ export class WorkspacesGateway
         this.io.server
           .of('/workspace')
           .in(payload.channelId)
-          .emit('icecandidate', payload.candidate)
+          .emit('icecandidate', payload)
       })
       this.subscriber.subscribe('offer', (data) => {
         const payload = JSON.parse(data)
@@ -91,12 +91,21 @@ export class WorkspacesGateway
           .in(payload.channelId)
           .emit('offer', payload)
       })
+      this.subscriber.subscribe('client-icecandidate', (data) => {
+        const payload = JSON.parse(data)
+        console.log('client-icecandidate : ', payload)
+        this.io.server
+          .of('/workspace')
+          .in(payload.channelId)
+          .emit('client-icecandidate', payload)
+      })
+      //
       return result
     } catch (err) {
       return err
     }
   }
-
+  //
   @SubscribeMessage('add-ice')
   async sendCandidate(
     @ConnectedSocket() client: Socket,
@@ -114,20 +123,37 @@ export class WorkspacesGateway
       type: data.type,
     })
   }
+  @SubscribeMessage('add-client-ice')
+  async sendClientCandidate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    data: {
+      candidate: RTCIceCandidate
+      type: 'clientIce'
+      channelId: string
+    },
+  ) {
+    return this.grpcService.addIce({
+      channelId: data.channelId,
+      sessionId: client.id,
+      candidate: JSON.stringify(data.candidate),
+      type: data.type,
+    })
+  }
 
   @SubscribeMessage('leave_room')
   async leaveRoom(
     @ConnectedSocket() client: Socket,
     @MessageBody() roomName: string,
   ) {
-    console.log('leave :  ', { channelId: roomName, sessionId: client.id })
-    await this.grpcService.Leave({
-      channelId: roomName,
-      sessionId: client.id,
-    })
     await client.leave(roomName)
     const userList = await this.findJoinedUsers(roomName)
+    this.logger.debug(`LEAVEROOM : ${client.id}`)
     client.to(roomName).emit('leave_room', { userList, ok: true })
+    await this.grpcService.Leave({
+      channelId: client.roomName,
+      sessionId: client.id,
+    })
     this.serverRoomChange()
     return roomName
   }
@@ -135,10 +161,13 @@ export class WorkspacesGateway
   @SubscribeMessage('answer')
   sendRTCanswer(
     @ConnectedSocket() client: Socket,
-    @MessageBody('answer') answer: string,
-    @MessageBody('roomName') roomName: string,
+    @MessageBody() signal: Signal,
   ) {
-    client.to(roomName).emit('answer', answer)
+    return this.grpcService.answer({
+      ...signal,
+      candidate: '',
+      sessionId: client.id,
+    })
   }
 
   @SubscribeMessage('ice')
@@ -158,7 +187,10 @@ export class WorkspacesGateway
 
   async handleDisconnect(@ConnectedSocket() client: Socket) {
     this.logger.log(`disconnected : ${client.id}`)
-
+    await this.grpcService.Leave({
+      channelId: client.roomName,
+      sessionId: client.id,
+    })
     this.serverRoomChange()
   }
   //
@@ -195,4 +227,3 @@ export class WorkspacesGateway
     return AllRooms
   }
 }
-//

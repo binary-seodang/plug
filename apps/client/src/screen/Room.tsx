@@ -11,6 +11,105 @@ const Room = () => {
   const [joinedUsers, setJoindUsers] = useState<[] | string[]>([])
   const [lastJoinedUser, setLastJoined] = useState<string | null>(null)
   const myVideo = useRef<HTMLVideoElement>(null)
+
+  const createPeer = useCallback(async (stream?: MediaStream) => {
+    const peer = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: [
+            'stun:stun.l.google.com:19302',
+            'stun:stun1.l.google.com:19302',
+            'stun:stun2.l.google.com:19302',
+            'stun:stun3.l.google.com:19302',
+            'stun:stun4.l.google.com:19302',
+          ],
+        },
+      ],
+    })
+    // const peer = new Peer({ initiator: true })
+
+    stream && stream.getTracks().forEach((track) => peer.addTrack(track, stream))
+
+    peer.addEventListener('connectionstatechange', (e) => {
+      console.log(e, '<< == connectionstatechange')
+      console.log(peer.connectionState, '<< == connectionstatechange')
+    })
+
+    const offer = await peer.createOffer()
+    await peer.setLocalDescription(offer)
+
+    socket.emit(
+      'offer',
+      { sdp: offer.sdp, type: offer.type, channelId: roomName },
+      async (data) => {
+        await peer.setRemoteDescription(
+          new RTCSessionDescription({
+            type: data.type,
+            sdp: data.sdp,
+          }),
+        )
+        peer.addEventListener('icecandidate', async (e) => {
+          if (!e.candidate) return
+          socket.emit('add-ice', { candidate: e.candidate, type: e.type, channelId: roomName })
+          socket.listen('icecandidate', (data) => {
+            const payload: RTCIceCandidate = JSON.parse(data.candidate)
+            console.log(data, 'ICE SOCKET RECEIVE')
+            console.log(payload, 'socket:  icecandidate')
+            peer.addIceCandidate(payload)
+          })
+        })
+      },
+    )
+    return peer
+  }, [])
+
+  const createStreamPeer = useCallback(async (sdp: string) => {
+    const peer = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: [
+            'stun:stun.l.google.com:19302',
+            'stun:stun1.l.google.com:19302',
+            'stun:stun2.l.google.com:19302',
+            'stun:stun3.l.google.com:19302',
+            'stun:stun4.l.google.com:19302',
+          ],
+        },
+      ],
+    })
+
+    await peer.setRemoteDescription(
+      new RTCSessionDescription({
+        type: 'offer',
+        sdp,
+      }),
+    )
+    peer.addEventListener('connectionstatechange', (e) => {
+      console.log(e, '<< == connectionstatechange')
+      console.log(peer.connectionState, '<< == connectionstatechange')
+    })
+
+    const answer = await peer.createAnswer()
+    await peer.setLocalDescription(answer)
+    peer.addEventListener('icecandidate', async (e) => {
+      console.log('create stream peer : icecandidate ', e)
+      if (!e.candidate) return
+      socket.emit('add-client-ice', {
+        candidate: e.candidate,
+        type: 'clientIce',
+        channelId: roomName,
+      })
+      socket.listen('client-icecandidate', (data) => {
+        const payload: RTCIceCandidate = JSON.parse(data.candidate)
+        console.log(data, 'ICE SOCKET RECEIVE')
+        console.log(payload, 'socket:  icecandidate')
+        peer.addIceCandidate(payload)
+      })
+    })
+    socket.emit('answer', { sdp: answer.sdp, type: answer.type, channelId: roomName })
+    return peer
+  }, [])
+
   const onRefreshRoomSetting = useCallback(({ ok, joinedUserNickname, userList }: Welcome) => {
     if (ok && userList) {
       if (joinedUserNickname) {
@@ -24,6 +123,11 @@ const Room = () => {
     onConnect(socket) {
       socket.listen('welcome', onRefreshRoomSetting)
       socket.listen('leave_room', onRefreshRoomSetting)
+      socket.listen('offer', async (data: any) => {
+        const payload = data
+        const peer = await createStreamPeer(payload.sdp)
+        console.log('create STREAM PEER : ', peer)
+      })
     },
     onMounted(socket) {
       if (socket.connected) {
@@ -37,75 +141,7 @@ const Room = () => {
   })
   const { isLoading, stream } = useRTCConnection({
     async onConnect(stream) {
-      const peer = new RTCPeerConnection({
-        iceServers: [
-          {
-            urls: [
-              'stun:stun.l.google.com:19302',
-              'stun:stun1.l.google.com:19302',
-              'stun:stun2.l.google.com:19302',
-              'stun:stun3.l.google.com:19302',
-              'stun:stun4.l.google.com:19302',
-            ],
-          },
-        ],
-      })
-
-      stream.getTracks().forEach((track) => peer.addTrack(track, stream))
-
-      peer.addEventListener('connectionstatechange', (e) => {
-        console.log(e, '<< == connectionstatechange')
-        console.log(peer.connectionState, '<< == connectionstatechange')
-      })
-
-      const offer = await peer.createOffer()
-      await peer.setLocalDescription(offer)
-      socket.emit(
-        'offer',
-        { sdp: offer.sdp, type: offer.type, channelId: roomName },
-        async (data) => {
-          console.log(data)
-          await peer.setRemoteDescription(
-            new RTCSessionDescription({
-              type: data.type,
-              sdp: data.sdp,
-            }),
-          )
-          peer.addEventListener('icecandidate', async (e) => {
-            console.log(e)
-            if (!e.candidate) return
-            console.log(e)
-            socket.emit('add-ice', { candidate: e.candidate, type: e.type, channelId: roomName })
-            socket.listen('icecandidate', (data) => {
-              const payload: RTCIceCandidate = JSON.parse(data)
-              peer.addIceCandidate(payload)
-
-              // socket.listen('offer', async (data) => {
-              // await peer.setRemoteDescription(data.sdp)
-              // const answer = await peer.createAnswer()
-              // await peer.setLocalDescription(answer)
-              // })
-            })
-          })
-          // peer.addEventListener('icecandidate', async (e) => {
-          //   if (!e.candidate) return
-          //   socket.emit('add-ice', { candidate: e.candidate, type: e.type, channelId: roomName })
-          //   socket.on('icecandidate', (data) => {
-          //     const payload: RTCIceCandidate = JSON.parse(data)
-          //     peer.addIceCandidate(payload)
-          //     peer.addEventListener('track', (e) => {
-          //       console.log(e)
-          //     })
-
-          //     // socket.on('offer', async (data) => {
-          //     //   await peer.setRemoteDescription(data.sdp)
-          //     //   // const answer = await peer.createAnswer()
-          //     //   // await peer.setLocalDescription(answer)
-          //     // })
-          //   })
-          // })
-        },
-      )
+      await createPeer(stream)
     },
   })
   useEffect(() => {

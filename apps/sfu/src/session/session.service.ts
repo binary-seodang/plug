@@ -37,6 +37,11 @@ export class SessionService {
       .getConnectionById(sessionId, this.actionCreator())
   }
 
+  async receiveAnswer(signal: Signal) {
+    const connection = this.getConnection(signal.channelId, signal.sessionId)
+    return connection.receiveAnswer(signal.sessionId, signal.sdp)
+  }
+
   async ClientIcecandidate(signal: Signal) {
     const { channelId, sessionId, candidate, fromSessionId } = signal
     const connection = this.getConnection(channelId, sessionId)

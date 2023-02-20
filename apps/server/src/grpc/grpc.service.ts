@@ -7,7 +7,6 @@ import { GRPC_CLIENT } from 'common/common.constants'
 import { Observable } from 'rxjs'
 import { Signal, LeaveParams } from '@plug/proto'
 import { GrpcInterceptor } from './grpc.interceptor'
-import { Metadata } from '@grpc/grpc-js'
 
 interface PlugGrpc {
   Call(Signal: Signal): Observable<Signal>
@@ -48,25 +47,21 @@ export class GrpcService implements OnModuleInit {
     } catch (err) {
       return
     }
-    // TODO : answer offer rpc 만들기
   }
 
   async addIce(data: Signal) {
     try {
-      return toPromise(this.grpc.Answer(data))
+      return toPromise(this.grpc.ClientIcecandidate(data))
     } catch (err) {
       return
     }
   }
 
   async Leave(leaveParam: LeaveParams) {
-    try {
-      const meta = new Metadata()
-      meta.add('test', '123')
-      console.log(meta)
-      return this.grpc.Exit(leaveParam)
-    } catch (err) {
-      return
-    }
+    return toPromise(this.grpc.Exit(leaveParam))
+  }
+
+  async answer(signal: Signal) {
+    return toPromise(this.grpc.Answer(signal))
   }
 }
