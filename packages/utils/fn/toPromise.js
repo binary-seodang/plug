@@ -37,24 +37,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var toPromise = function (fn) { return __awaiter(void 0, void 0, void 0, function () {
-    var err_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0:
-                _a.trys.push([0, 2, , 3]);
-                return [4 /*yield*/, new Promise(function (resolve) {
+            case 0: return [4 /*yield*/, new Promise(function (resolve, reject) {
+                    try {
                         fn.subscribe({
                             next: function (value) {
                                 return resolve(value);
                             }
                         });
-                    })];
+                    }
+                    catch (err) {
+                        return reject(err);
+                    }
+                })];
             case 1: return [2 /*return*/, _a.sent()];
-            case 2:
-                err_1 = _a.sent();
-                console.error(err_1);
-                return [2 /*return*/, {}];
-            case 3: return [2 /*return*/];
         }
     });
 }); };

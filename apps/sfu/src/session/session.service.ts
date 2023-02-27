@@ -1,3 +1,4 @@
+import type { LeaveParams } from '@plug/proto/types/plug/LeaveParams'
 import { Signal } from '@plug/proto'
 import { ConnectionManager } from './connection-manager.service'
 import { Injectable } from '@nestjs/common'
@@ -20,7 +21,6 @@ export class SessionService {
   async call(signal: Signal) {
     const { sessionId, sdp, channelId } = signal
     const channel = this.channelManager.getChannelById(channelId)
-
     const connection = channel
       .getConnectionManager()
       .getConnectionById(sessionId, this.actionCreator())
@@ -30,33 +30,42 @@ export class SessionService {
     return { answer, connection }
   }
 
-  getConnection(sessionId: string) {
-    return this.connectionManager.getConnectionById(
-      sessionId,
-      this.actionCreator(),
-    )
+  getConnection(channelId: string, sessionId: string) {
+    const channel = this.channelManager.getChannelById(channelId)
+    return channel
+      .getConnectionManager()
+      .getConnectionById(sessionId, this.actionCreator())
+  }
+
+  async receiveAnswer(signal: Signal) {
+    const connection = this.getConnection(signal.channelId, signal.sessionId)
+    return connection.receiveAnswer(signal.sessionId, signal.sdp)
   }
 
   async ClientIcecandidate(signal: Signal) {
-    const { sessionId, candidate, fromSessionId } = signal
-    const connection = this.connectionManager.getConnectionById(
-      fromSessionId,
-      this.actionCreator(),
-    )
+    const { channelId, sessionId, candidate, fromSessionId } = signal
+    const connection = this.getConnection(channelId, sessionId)
     try {
-      const parsedCandidate = JSON.parse(candidate)
+      const parsedCandidate: RTCIceCandidate = JSON.parse(candidate)
       if (sessionId) {
         connection?.addIceCandidateForOutputPeer(sessionId, parsedCandidate)
       } else {
-        connection?.addIceCandidate(parsedCandidate)
+        connection.addIceCandidate(parsedCandidate)
       }
     } catch {}
     return {}
   }
 
-  addIce(data: any) {
-    const connection = this.getConnection(data.sessionId)
-    connection.addIceCandidate(JSON.parse(data.candidate))
+  addIce(data: Signal) {
+    const { channelId, sessionId, candidate } = data
+    const connection = this.getConnection(channelId, sessionId)
+    connection.addIceCandidate(JSON.parse(candidate))
     return
+  }
+  disconnect(leaveParams: LeaveParams) {
+    return this.getConnection(
+      leaveParams.channelId,
+      leaveParams.sessionId,
+    ).dispose()
   }
 }

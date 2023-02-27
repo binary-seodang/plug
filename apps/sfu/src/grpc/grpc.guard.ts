@@ -7,6 +7,7 @@ export class GrpcGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const ctx = context.switchToRpc().getData()
-    return !!ctx.sessionId && !!ctx.type
+    // 이거 잘동작하는구나.. 며칠을 너때문에 고생했단다
+    return !!ctx.sessionId
   }
 }

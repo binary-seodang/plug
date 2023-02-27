@@ -3,7 +3,7 @@ import { redisClient } from './../redis/redis.adapter'
 import { JwtService } from 'jwt/jwt.service'
 import { UsersService } from 'users/users.service'
 import { WSAuthMiddleware } from 'sockets/sockets.middleware'
-import { UseFilters, Logger } from '@nestjs/common'
+import { UseFilters, Logger, UseInterceptors } from '@nestjs/common'
 import { WebSocketGateway } from '@nestjs/websockets'
 import {
   ConnectedSocket,
@@ -18,14 +18,14 @@ import {
 } from '@nestjs/websockets/interfaces'
 import { Namespace, Socket, AuthSocket } from 'socket.io'
 import { getServerRoomDto } from 'events/dtos/gateway.dto'
-
 import { WsExceptionFilter } from 'sockets/sockets-exception.filter'
-import { CreateConnectionDto } from './dtos/create-connection.dto'
 import { GrpcService } from 'grpc/grpc.service'
-import { GrpcMethod } from '@nestjs/microservices'
 import { createClient } from 'redis'
-
+import { GrpcInterceptor } from 'grpc/grpc.interceptor'
+import { ExceptionFilter } from 'grpc/grpc.filter'
 @UseFilters(new WsExceptionFilter())
+@UseFilters(new ExceptionFilter())
+@UseInterceptors(GrpcInterceptor)
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -36,6 +36,7 @@ import { createClient } from 'redis'
 export class WorkspacesGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
+  //
   private readonly logger = new Logger(WorkspacesGateway.name)
   private subscriber: redisClient
   constructor(
@@ -53,7 +54,6 @@ export class WorkspacesGateway
     if (!nickname) {
       return { ok: false }
     }
-
     client.join(roomName)
     const userList = await this.findJoinedUsers(roomName)
     client
@@ -64,38 +64,80 @@ export class WorkspacesGateway
     return { joinedUserNickname: nickname, userList, ok: true }
   }
 
-  @SubscribeMessage('stream')
+  @SubscribeMessage('offer')
   async onStream(
     @ConnectedSocket() client: Socket,
     @MessageBody() signal: Signal,
   ) {
-    const result = await this.grpcService.connect({
-      sessionId: client.sessionId,
-      fromSessionId: client.sessionId,
-      candidate: '',
-      ...signal,
-    })
-    this.subscriber.subscribe('icecandidate', async (data) => {
-      const payload = JSON.parse(data)
-      this.io.server
-        .of('/workspace')
-        .in(payload.channelId)
-        .emit('icecandidate', payload.candidate)
-    })
-    return result
-  }
+    try {
+      const result = await this.grpcService.connect({
+        sessionId: client.id,
+        fromSessionId: client.id,
+        candidate: '',
+        ...signal,
+      })
 
-  @SubscribeMessage('sender-cadidate')
+      this.subscriber.subscribe('icecandidate', async (data) => {
+        const payload = JSON.parse(data)
+        this.io.server
+          .of('/workspace')
+          .in(payload.channelId)
+          .emit('icecandidate', payload)
+      })
+      this.subscriber.subscribe('offer', (data) => {
+        const payload = JSON.parse(data)
+        this.io.server
+          .of('/workspace')
+          .in(payload.channelId)
+          .emit('offer', payload)
+      })
+      this.subscriber.subscribe('client-icecandidate', (data) => {
+        const payload = JSON.parse(data)
+        console.log('client-icecandidate : ', payload)
+        this.io.server
+          .of('/workspace')
+          .in(payload.channelId)
+          .emit('client-icecandidate', payload)
+      })
+      //
+      return result
+    } catch (err) {
+      return err
+    }
+  }
+  //
+  @SubscribeMessage('add-ice')
   async sendCandidate(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: any,
+    @MessageBody()
+    data: {
+      candidate: RTCIceCandidate
+      type: 'icecandidate'
+      channelId: string
+    },
   ) {
-    const candidate = JSON.stringify(data.candidate)
-    return this.grpcService.sendIce({
-      channelId: client.roomName,
-      sessionId: client.sessionId,
-      candidate,
-      fromSessionIdd: data.senderId,
+    return this.grpcService.addIce({
+      channelId: data.channelId,
+      sessionId: client.id,
+      candidate: JSON.stringify(data.candidate),
+      type: data.type,
+    })
+  }
+  @SubscribeMessage('add-client-ice')
+  async sendClientCandidate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    data: {
+      candidate: RTCIceCandidate
+      type: 'clientIce'
+      channelId: string
+    },
+  ) {
+    return this.grpcService.addIce({
+      channelId: data.channelId,
+      sessionId: client.id,
+      candidate: JSON.stringify(data.candidate),
+      type: data.type,
     })
   }
 
@@ -106,28 +148,26 @@ export class WorkspacesGateway
   ) {
     await client.leave(roomName)
     const userList = await this.findJoinedUsers(roomName)
+    this.logger.debug(`LEAVEROOM : ${client.id}`)
     client.to(roomName).emit('leave_room', { userList, ok: true })
+    await this.grpcService.Leave({
+      channelId: client.roomName,
+      sessionId: client.id,
+    })
     this.serverRoomChange()
     return roomName
-  }
-
-  @SubscribeMessage('offer')
-  requestRTCOffer(
-    @ConnectedSocket() client: Socket,
-    // TODO : Offer Type assertion
-    @MessageBody('offer') offer: any,
-    @MessageBody('roomName') roomName: string,
-  ) {
-    client.to(roomName).emit('offer', offer)
   }
 
   @SubscribeMessage('answer')
   sendRTCanswer(
     @ConnectedSocket() client: Socket,
-    @MessageBody('answer') answer: string,
-    @MessageBody('roomName') roomName: string,
+    @MessageBody() signal: Signal,
   ) {
-    client.to(roomName).emit('answer', answer)
+    return this.grpcService.answer({
+      ...signal,
+      candidate: '',
+      sessionId: client.id,
+    })
   }
 
   @SubscribeMessage('ice')
@@ -140,16 +180,20 @@ export class WorkspacesGateway
   }
 
   handleConnection(@ConnectedSocket() client: Socket) {
-    this.logger.debug(`connected : ${client.sessionId}`)
+    this.logger.debug(`connected : ${client.id}`)
     this.logger.debug(`namespace : ${client.nsp.name}`)
     this.serverRoomChange()
   }
 
-  handleDisconnect(@ConnectedSocket() client: Socket) {
+  async handleDisconnect(@ConnectedSocket() client: Socket) {
     this.logger.log(`disconnected : ${client.id}`)
+    await this.grpcService.Leave({
+      channelId: client.roomName,
+      sessionId: client.id,
+    })
     this.serverRoomChange()
   }
-
+  //
   async afterInit(io: Namespace) {
     this.subscriber = createClient({
       url: process.env.REDIS_URL,

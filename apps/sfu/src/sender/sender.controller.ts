@@ -1,74 +1,61 @@
+import type { LeaveParams } from '@plug/proto/types/plug/LeaveParams'
 import { PrismaService } from 'prisma/prisma.service'
 import { GrpcInterceptor } from './../grpc/grpc.interceptor'
 import { Controller, UseInterceptors } from '@nestjs/common'
 import { GrpcMethod } from '@nestjs/microservices'
-import { Metadata } from '@grpc/grpc-js'
-
-import { Observable } from 'rxjs'
+import { Metadata, ServerUnaryCall } from '@grpc/grpc-js'
 import { Signal } from '@plug/proto'
-
 import { SessionService } from 'session/session.service'
 
 interface PlugGrpc {
-  Call(Signal: Signal): Observable<Signal>
-  call(Signal: Signal): Observable<Signal>
-  sendOffer(Signal: Signal): Observable<Signal>
-  ClientIcecandidate(Signal: Signal): Observable<object>
-  answer(Signal: Signal): Observable<null>
-  Answer(Signal: Signal): Observable<null>
+  Call(
+    Signal: Signal,
+    meta: Metadata,
+    call: ServerUnaryCall<any, any>,
+  ): Promise<Signal>
+  ClientIcecandidate(
+    Signal: Signal,
+    meta: Metadata,
+    call: ServerUnaryCall<any, any>,
+  ): Promise<void | object>
+  Answer(
+    Signal: Signal,
+    meta: Metadata,
+    call: ServerUnaryCall<any, any>,
+  ): Promise<void>
 }
 
 @Controller('sender')
 @UseInterceptors(GrpcInterceptor)
-export class Plug {
+export class Plug implements PlugGrpc {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly sessionService: SessionService,
   ) {}
-
   @GrpcMethod('Plug', 'call')
   async Call(signal: Signal) {
-    const { connection, answer } = await this.sessionService.call(signal)
-    const ok = await this.prismaService.session.upsert({
-      where: {
-        id: connection.id,
-      },
-      update: {
-        id: connection.id,
-        state: signal.type,
-        disabled: false,
-      },
-      create: {
-        id: connection.id,
-        state: signal.type,
-        disabled: false,
-      },
-    })
-
-    return { ...signal, sdp: answer.sdp, type: answer.type }
+    try {
+      const { answer } = await this.sessionService.call(signal)
+      return { ...signal, sdp: answer.sdp, type: answer.type }
+    } catch (err) {
+      return signal
+    }
   }
   @GrpcMethod('Plug', 'ClientIcecandidate')
-  async ClientIcecandidate(data: {
-    type: string
-    sessionId: string
-    sdp: string
-    channelId: string
-    from: string
-  }) {
-    return this.sessionService.ClientIcecandidate(data)
-
-    // return { sessionId: connection.id, ...answer }
+  async ClientIcecandidate(data: Signal) {
+    if (data.type === 'icecandidate') {
+      return this.sessionService.addIce(data)
+    } else if (data.type === 'clientIce') {
+      return this.sessionService.ClientIcecandidate(data)
+    }
+  }
+  @GrpcMethod('Plug', 'Exit')
+  async Exit(leaveParams: LeaveParams) {
+    this.sessionService.disconnect(leaveParams)
+    return Promise.resolve({})
   }
   @GrpcMethod('Plug', 'Answer')
-  async Answer(data: {
-    type: string
-    sessionId: string
-    sdp: string
-    channelId: string
-  }) {
-    return this.sessionService.addIce(data)
-    // return this.sessionService.ClientIcecandidate(data)
-
-    // return { sessionId: connection.id, ...answer }
+  async Answer(signal: Signal) {
+    return this.sessionService.receiveAnswer(signal)
   }
 }

@@ -32,8 +32,6 @@ export class Connection {
 
   async call(connection: Connection) {
     const { stream } = connection
-    console.log('??????????????????????????????????')
-    //
     if (!stream) return
 
     const peer = new RTCPeerConnection(config)
@@ -43,42 +41,37 @@ export class Connection {
       if (!e.candidate) return
 
       this.dispatch({
-        type: 'icecandidate',
+        type: 'client-icecandidate',
         sessionId: this.id,
         candidate: JSON.stringify(e.candidate),
         channelId: this.channel.id,
       })
     })
 
-    stream.getTracks().forEach((track) => {
+    stream?.getTracks().forEach((track) => {
       peer.addTrack(track, stream)
     })
 
     const offer = await peer.createOffer()
     peer.setLocalDescription(offer)
-    this.dispatch({
-      type: 'offer',
-      sdp: offer.sdp,
-      sessionId: this.id,
-      channelId: this.channel.id,
-    })
+    if (this.dispatch) {
+      this.dispatch({
+        type: 'offer',
+        sdp: offer.sdp,
+        sessionId: this.id,
+        channelId: this.channel.id,
+      })
+    }
   }
-
+  //
   async receiveCall(sdp: string) {
     const peer = new RTCPeerConnection(config)
     this.peerConnection = peer
     peer.addEventListener('track', (e) => {
-      console.log(this.outputPeerConnections, ' << track')
       const stream = e.streams[0]
       this.stream = stream
-      stream.getTracks().forEach((stream) => console.log(stream))
-      // console.log(, 'get stream')
     })
 
-    await peer.setRemoteDescription({
-      type: 'offer',
-      sdp,
-    })
     peer.addEventListener('icecandidate', (e) => {
       if (!e.candidate) return
 
@@ -95,26 +88,24 @@ export class Connection {
     })
 
     peer.addEventListener('connectionstatechange', (e) => {
-      console.log(
-        peer.connectionState,
-        'peer.connectionState',
-        this.isConnected,
-      )
+      console.log(peer.connectionState, '<<==peer.connectionState')
       if (peer.connectionState === 'connected' && !this.isConnected) {
-        console.log(peer.connectionState === 'connected' && !this.isConnected)
         this.isConnected = true
-        console.log(this.channel)
         const connections = this.channel.getConnectionsExcept(this.id)
-        console.log(connections, 'connections')
+        console.log(connections.length)
+        console.log(connections, '<<< connections')
         connections.forEach((connection) => this.call(connection))
         connections.forEach((connection) => connection.call(this))
       } else if (peer.connectionState === 'failed' && this.isConnected) {
         this.dispose()
       }
     })
-
+    await peer.setRemoteDescription({
+      type: 'offer',
+      sdp,
+    })
     const answer = await peer.createAnswer()
-    peer.setLocalDescription(answer)
+    await peer.setLocalDescription(answer)
     return answer
   }
 
@@ -148,7 +139,7 @@ export class Connection {
     this.peerConnection.addIceCandidate(candidate)
   }
 
-  addIceCandidateForOutputPeer(sessionId: string, candidate: any) {
+  addIceCandidateForOutputPeer(sessionId: string, candidate: RTCIceCandidate) {
     if (!candidate) return
     const outputPeer = this.outputPeerConnections.get(sessionId)
     if (!outputPeer) return

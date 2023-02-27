@@ -5,16 +5,8 @@ import { ClientGrpcProxy } from '@nestjs/microservices'
 import { toPromise } from '@plug/utils'
 import { GRPC_CLIENT } from 'common/common.constants'
 import { Observable } from 'rxjs'
-import { Signal } from '@plug/proto'
+import { Signal, LeaveParams } from '@plug/proto'
 import { GrpcInterceptor } from './grpc.interceptor'
-interface ConnectDto {
-  sessionId: string
-  channelId: string
-}
-
-interface SendOffer extends ConnectDto {
-  sdp: string
-}
 
 interface PlugGrpc {
   Call(Signal: Signal): Observable<Signal>
@@ -22,6 +14,9 @@ interface PlugGrpc {
   sendOffer(Signal: Signal): Observable<Signal>
   ClientIcecandidate(Signal: Signal): Observable<object>
   Answer(Signal: Signal): Observable<null>
+  addIce(Signal: Signal): Observable<Signal>
+  Exit(Signal: LeaveParams)
+  leave(Signal: LeaveParams): Observable<LeaveParams>
 }
 
 @Injectable()
@@ -36,41 +31,37 @@ export class GrpcService implements OnModuleInit {
 
   async connect(param: Signal) {
     try {
-      const result = await toPromise(
-        this.grpc.call({ ...param, type: 'connection' }),
-      )
-      return result
+      return toPromise(this.grpc.call(param))
     } catch {
       return false
     }
   }
-
   async ClientIcecandidate(signal: Signal) {
     try {
-      const result = await toPromise(
+      return toPromise(
         this.grpc.ClientIcecandidate({
           type: 'offer',
           ...signal,
         }),
       )
-      return result
     } catch (err) {
       return
     }
-    // TODO : answer offer rpc 만들기
   }
 
-  async sendIce(data: any) {
+  async addIce(data: Signal) {
     try {
-      const result = await toPromise(
-        this.grpc.Answer({
-          type: 'Answer',
-          ...data,
-        }),
-      )
-      return result
+      return toPromise(this.grpc.ClientIcecandidate(data))
     } catch (err) {
       return
     }
+  }
+
+  async Leave(leaveParam: LeaveParams) {
+    return toPromise(this.grpc.Exit(leaveParam))
+  }
+
+  async answer(signal: Signal) {
+    return toPromise(this.grpc.Answer(signal))
   }
 }

@@ -12,7 +12,7 @@ export class GrpcInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       catchError((err) => {
-        console.error(err)
+        console.error('interceptor !!!')
         if (err instanceof TimeoutError) {
           return throwError(() => new RpcException('rpc connect refused'))
         }
