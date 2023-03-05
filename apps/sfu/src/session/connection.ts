@@ -63,7 +63,7 @@ export class Connection {
       })
     }
   }
-  //
+
   async receiveCall(sdp: string) {
     const peer = new RTCPeerConnection(config)
     this.peerConnection = peer
@@ -86,14 +86,10 @@ export class Connection {
         }
       }, 50)
     })
-
     peer.addEventListener('connectionstatechange', (e) => {
-      console.log(peer.connectionState, '<<==peer.connectionState')
       if (peer.connectionState === 'connected' && !this.isConnected) {
         this.isConnected = true
         const connections = this.channel.getConnectionsExcept(this.id)
-        console.log(connections.length)
-        console.log(connections, '<<< connections')
         connections.forEach((connection) => this.call(connection))
         connections.forEach((connection) => connection.call(this))
       } else if (peer.connectionState === 'failed' && this.isConnected) {
@@ -116,7 +112,7 @@ export class Connection {
     this.channel?.removeConnection(this)
     console.log('I am disposed...')
   }
-
+  //
   async receiveAnswer(sessionId: string, sdp: string) {
     const outputPeer = this.outputPeerConnections.get(sessionId)
     if (!outputPeer) return
@@ -143,6 +139,7 @@ export class Connection {
     if (!candidate) return
     const outputPeer = this.outputPeerConnections.get(sessionId)
     if (!outputPeer) return
+    // console.log(outputPeer, 'outputPeer', sessionId)
     const queue = this.outputPeerCandidateQueue.get(sessionId) ?? []
     if (!outputPeer.remoteDescription) {
       queue.push(candidate)

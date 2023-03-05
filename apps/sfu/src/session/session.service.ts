@@ -39,7 +39,7 @@ export class SessionService {
 
   async receiveAnswer(signal: Signal) {
     const connection = this.getConnection(signal.channelId, signal.sessionId)
-    return connection.receiveAnswer(signal.sessionId, signal.sdp)
+    return connection.receiveAnswer(signal.fromSessionId, signal.sdp)
   }
 
   async ClientIcecandidate(signal: Signal) {
@@ -47,8 +47,8 @@ export class SessionService {
     const connection = this.getConnection(channelId, sessionId)
     try {
       const parsedCandidate: RTCIceCandidate = JSON.parse(candidate)
-      if (sessionId) {
-        connection?.addIceCandidateForOutputPeer(sessionId, parsedCandidate)
+      if (fromSessionId) {
+        connection?.addIceCandidateForOutputPeer(fromSessionId, parsedCandidate)
       } else {
         connection.addIceCandidate(parsedCandidate)
       }

@@ -85,7 +85,7 @@ export class EventsGateway
   }
 
   handleConnection(@ConnectedSocket() client: AuthSocket) {
-    this.logger.debug(`connected : ${client.id}`)
+    this.logger.debug(`connected : ${client.sessionId}`)
     this.logger.debug(`namespace : ${client.nsp.name}`)
 
     this.serverRoomChange()

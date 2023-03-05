@@ -68,47 +68,60 @@ const Room = () => {
     return peer
   }, [])
 
-  const createStreamPeer = useCallback(async (sdp: string) => {
-    const peer = new RTCPeerConnection({
-      iceServers: [
+  const createStreamPeer = useCallback(
+    async (payload: { sdp: string; sessionId: string; channelId: string }) => {
+      const peer = new RTCPeerConnection({
+        iceServers: [
+          {
+            urls: [
+              'stun:stun.l.google.com:19302',
+              'stun:stun1.l.google.com:19302',
+              'stun:stun2.l.google.com:19302',
+              'stun:stun3.l.google.com:19302',
+              'stun:stun4.l.google.com:19302',
+            ],
+          },
+        ],
+      })
+
+      await peer.setRemoteDescription(
+        new RTCSessionDescription({
+          type: 'offer',
+          sdp: payload.sdp,
+        }),
+      )
+      // peer.addEventListener('connectionstatechange', (e) => {
+      //   console.log(e, '<< == connectionstatechange')
+      //   console.log(peer.connectionState, '<< == connectionstatechange')
+      // })
+
+      const answer = await peer.createAnswer()
+      await peer.setLocalDescription(answer)
+      peer.addEventListener(
+        'icecandidate',
+        handleIce({
+          peer,
+          roomName,
+          socket,
+          type: 'client',
+          fromSessionId: payload.sessionId,
+        }),
+      )
+      console.log('이거여러번실행함?')
+      socket.emit(
+        'answer',
         {
-          urls: [
-            'stun:stun.l.google.com:19302',
-            'stun:stun1.l.google.com:19302',
-            'stun:stun2.l.google.com:19302',
-            'stun:stun3.l.google.com:19302',
-            'stun:stun4.l.google.com:19302',
-          ],
+          sdp: answer.sdp,
+          type: answer.type,
+          channelId: roomName,
+          fromSessionId: payload.sessionId,
         },
-      ],
-    })
-
-    await peer.setRemoteDescription(
-      new RTCSessionDescription({
-        type: 'offer',
-        sdp,
-      }),
-    )
-    peer.addEventListener('connectionstatechange', (e) => {
-      console.log(e, '<< == connectionstatechange')
-      console.log(peer.connectionState, '<< == connectionstatechange')
-    })
-
-    const answer = await peer.createAnswer()
-    await peer.setLocalDescription(answer)
-    peer.addEventListener(
-      'icecandidate',
-      handleIce({
-        peer,
-        roomName,
-        socket,
-        type: 'client',
-      }),
-    )
-
-    socket.emit('answer', { sdp: answer.sdp, type: answer.type, channelId: roomName })
-    return peer
-  }, [])
+        (data) => {},
+      )
+      return peer
+    },
+    [],
+  )
 
   const onRefreshRoomSetting = useCallback(({ ok, joinedUserNickname, userList }: Welcome) => {
     if (ok && userList) {
@@ -123,11 +136,14 @@ const Room = () => {
     onConnect(socket) {
       socket.listen('welcome', onRefreshRoomSetting)
       socket.listen('leave_room', onRefreshRoomSetting)
-      socket.listen('offer', async (data: any) => {
-        const payload = data
-        const peer = await createStreamPeer(payload.sdp)
-        console.log('create STREAM PEER : ', peer)
-      })
+      socket.listen(
+        'offer',
+        async (data: { sdp: string; sessionId: string; channelId: string }) => {
+          const payload = data
+
+          const peer = await createStreamPeer(payload)
+        },
+      )
     },
     onMounted(socket) {
       if (socket.connected) {
