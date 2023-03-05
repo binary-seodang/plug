@@ -25,6 +25,11 @@ interface PlugGrpc {
   ): Promise<void>
 }
 
+enum IceType {
+  icecandidate = 'icecandidate',
+  clientIce = 'clientIce',
+}
+
 @Controller('sender')
 @UseInterceptors(GrpcInterceptor)
 export class Plug implements PlugGrpc {
@@ -43,9 +48,9 @@ export class Plug implements PlugGrpc {
   }
   @GrpcMethod('Plug', 'ClientIcecandidate')
   async ClientIcecandidate(data: Signal) {
-    if (data.type === 'icecandidate') {
+    if (data.type === IceType.icecandidate) {
       return this.sessionService.addIce(data)
-    } else if (data.type === 'clientIce') {
+    } else if (data.type === IceType.clientIce) {
       return this.sessionService.ClientIcecandidate(data)
     }
   }
