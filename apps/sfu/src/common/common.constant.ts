@@ -1,2 +1,1 @@
 export const PUBSUB_MODULE = 'PUBSUB_MODULE'
-export const OPENVIDU_MODULE = 'OPENVIDU_MODULE'

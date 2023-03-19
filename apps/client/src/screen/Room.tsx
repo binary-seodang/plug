@@ -1,4 +1,3 @@
-// import useSocket from 'hooks/useSocket'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Welcome } from 'types/dtos/socketResponse.dto'
 import useSocket from 'hooks/useSocket'
@@ -6,10 +5,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import useRTCConnection from 'hooks/useRTCConnection'
 import { Socket } from 'socket.io-client'
 import { handleIce } from 'libs/fn'
+import store from 'store/index'
+import { OpenVidu } from 'openvidu-browser'
+import useOv from 'hooks/useOv'
 
 const Room = () => {
   const { roomName } = useParams()
   const navigate = useNavigate()
+  const test = useOv(roomName!)
   const [joinedUsers, setJoindUsers] = useState<[] | string[]>([])
   const [lastJoinedUser, setLastJoined] = useState<string | null>(null)
   const myVideo = useRef<HTMLVideoElement>(null)
@@ -107,7 +110,6 @@ const Room = () => {
           fromSessionId: payload.sessionId,
         }),
       )
-      console.log('이거여러번실행함?')
       socket.emit(
         'answer',
         {
@@ -136,14 +138,14 @@ const Room = () => {
     onConnect(socket) {
       socket.listen('welcome', onRefreshRoomSetting)
       socket.listen('leave_room', onRefreshRoomSetting)
-      socket.listen(
-        'offer',
-        async (data: { sdp: string; sessionId: string; channelId: string }) => {
-          const payload = data
+      // socket.listen(
+      //   'offer',
+      //   async (data: { sdp: string; sessionId: string; channelId: string }) => {
+      //     const payload = data
 
-          const peer = await createStreamPeer(payload)
-        },
-      )
+      //     const peer = await createStreamPeer(payload)
+      //   },
+      // )
     },
     onMounted(socket) {
       if (socket.connected) {
@@ -155,11 +157,14 @@ const Room = () => {
       socket.emit('leave_room', roomName)
     },
   })
-  const { isLoading, stream } = useRTCConnection({
-    async onConnect(stream) {
-      await createPeer(socket, stream)
-    },
-  })
+
+  const me = store((state) => state.user)
+  console.log(me)
+  // const { isLoading, stream } = useRTCConnection({
+  //   async onConnect(stream) {
+  //     await createPeer(socket, stream)
+  //   },
+  // })
   useEffect(() => {
     socket.emit('join_room', roomName, onRefreshRoomSetting)
   }, [])

@@ -24,9 +24,9 @@ export class UsersResolver {
     return this.usersService.findById(reference.id).then((res) => res.user)
   }
 
-  @Query(() => User)
-  async getUser(@Args('id') id: number): Promise<User> {
-    return this.usersService.findById(id).then((res) => res.user)
+  @Query(() => UserProfileOutput)
+  async getUser(@Args('id') id: number): Promise<UserProfileOutput> {
+    return this.usersService.findById(id)
   }
 
   @Query(() => UserProfileOutput)

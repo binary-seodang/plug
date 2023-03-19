@@ -35,9 +35,31 @@ type UserProfileOutput {
   user: User
 }
 
+type ViduSession {
+  sessionId: String!
+  createdAt: TimeStamp!
+}
+
+"""TimeStamp Test Scalar"""
+scalar TimeStamp
+
+type ViduSessionOutput {
+  error: String
+  ok: Boolean!
+  session: ViduSession
+}
+
+type ViduTokenOutput {
+  error: String
+  ok: Boolean!
+  token: String
+}
+
 type Query {
-  getUser(id: Float!): User!
+  getUser(id: Float!): UserProfileOutput!
   getMe: UserProfileOutput!
+  getSession(sessionId: String!): ViduSessionOutput!
+  getToken(sessionId: String!): ViduTokenOutput!
 }
 
 type Mutation {

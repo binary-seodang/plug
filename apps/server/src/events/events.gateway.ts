@@ -19,9 +19,6 @@ import { UsersService } from 'users/users.service'
 import { JwtService } from 'jwt/jwt.service'
 
 import { WSAuthMiddleware } from 'sockets/sockets.middleware'
-import { Client, ClientGrpc, Transport } from '@nestjs/microservices'
-import { join } from 'path'
-import { PlugClient } from '@plug/proto'
 
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({
@@ -34,18 +31,6 @@ import { PlugClient } from '@plug/proto'
 export class EventsGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
-  @Client({
-    transport: Transport.GRPC,
-    options: {
-      url: process.env.GRPC_URL,
-      package: process.env.GRPC_PACKAGE,
-      protoPath: join(__dirname, '../proto/plug.proto'),
-    },
-  })
-  private readonly client1: ClientGrpc
-
-  private grpc: PlugClient
-
   private readonly logger: Logger
 
   @WebSocketServer() public io: Namespace
@@ -56,10 +41,6 @@ export class EventsGateway
     private readonly jwtService: JwtService,
   ) {
     this.logger = new Logger(EventsGateway.name)
-  }
-
-  onModuleInit() {
-    this.grpc = this.client1.getService('Plug')
   }
 
   @SubscribeMessage('set_nickname')

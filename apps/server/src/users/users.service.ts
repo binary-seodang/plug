@@ -18,7 +18,6 @@ export class UsersService {
           id,
         },
       })
-
       return {
         ok: true,
         user,

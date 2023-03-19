@@ -6,7 +6,7 @@ import { getMesh, ExecuteMeshFn, SubscribeMeshFn, MeshContext as BaseMeshContext
 import { MeshStore, FsStoreStorageAdapter } from '@graphql-mesh/store';
 import { path as pathModule } from '@graphql-mesh/cross-helpers';
 import { ImportFn } from '@graphql-mesh/types';
-import type { UsersTypes } from './sources/Users/types';
+import type { ServerTypes } from './sources/Server/types';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -24,6 +24,7 @@ export type Scalars = {
   Int: number;
   Float: number;
   DateTime: any;
+  TimeStamp: any;
 };
 
 export type User = {
@@ -52,14 +53,49 @@ export type UserProfileOutput = {
   user?: Maybe<User>;
 };
 
+export type ViduSession = {
+  sessionId: Scalars['String'];
+  createdAt: Scalars['TimeStamp'];
+};
+
+export type ViduSessionOutput = {
+  error?: Maybe<Scalars['String']>;
+  ok: Scalars['Boolean'];
+  session?: Maybe<ViduSession>;
+};
+
+export type ViduTokenOutput = {
+  error?: Maybe<Scalars['String']>;
+  ok: Scalars['Boolean'];
+  token?: Maybe<Scalars['String']>;
+};
+
 export type Query = {
-  getUser: User;
+  getUser: UserProfileOutput;
   getMe: UserProfileOutput;
+  getSession: ViduSessionOutput;
+  getToken: ViduTokenOutput;
+  getTokenConnection: ViduTokenOutput;
 };
 
 
 export type QuerygetUserArgs = {
   id: Scalars['Float'];
+};
+
+
+export type QuerygetSessionArgs = {
+  sessionId: Scalars['String'];
+};
+
+
+export type QuerygetTokenArgs = {
+  sessionId: Scalars['String'];
+};
+
+
+export type QuerygetTokenConnectionArgs = {
+  sessionId: Scalars['String'];
 };
 
 export type Mutation = {
@@ -167,6 +203,10 @@ export type ResolversTypes = ResolversObject<{
   LoginOutput: ResolverTypeWrapper<LoginOutput>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
   UserProfileOutput: ResolverTypeWrapper<UserProfileOutput>;
+  ViduSession: ResolverTypeWrapper<ViduSession>;
+  TimeStamp: ResolverTypeWrapper<Scalars['TimeStamp']>;
+  ViduSessionOutput: ResolverTypeWrapper<ViduSessionOutput>;
+  ViduTokenOutput: ResolverTypeWrapper<ViduTokenOutput>;
   Query: ResolverTypeWrapper<{}>;
   Float: ResolverTypeWrapper<Scalars['Float']>;
   Mutation: ResolverTypeWrapper<{}>;
@@ -182,6 +222,10 @@ export type ResolversParentTypes = ResolversObject<{
   LoginOutput: LoginOutput;
   Boolean: Scalars['Boolean'];
   UserProfileOutput: UserProfileOutput;
+  ViduSession: ViduSession;
+  TimeStamp: Scalars['TimeStamp'];
+  ViduSessionOutput: ViduSessionOutput;
+  ViduTokenOutput: ViduTokenOutput;
   Query: {};
   Float: Scalars['Float'];
   Mutation: {};
@@ -217,9 +261,36 @@ export type UserProfileOutputResolvers<ContextType = MeshContext, ParentType ext
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type ViduSessionResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['ViduSession'] = ResolversParentTypes['ViduSession']> = ResolversObject<{
+  sessionId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['TimeStamp'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export interface TimeStampScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['TimeStamp'], any> {
+  name: 'TimeStamp';
+}
+
+export type ViduSessionOutputResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['ViduSessionOutput'] = ResolversParentTypes['ViduSessionOutput']> = ResolversObject<{
+  error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  ok?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  session?: Resolver<Maybe<ResolversTypes['ViduSession']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type ViduTokenOutputResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['ViduTokenOutput'] = ResolversParentTypes['ViduTokenOutput']> = ResolversObject<{
+  error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  ok?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  token?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type QueryResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
-  getUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<QuerygetUserArgs, 'id'>>;
+  getUser?: Resolver<ResolversTypes['UserProfileOutput'], ParentType, ContextType, RequireFields<QuerygetUserArgs, 'id'>>;
   getMe?: Resolver<ResolversTypes['UserProfileOutput'], ParentType, ContextType>;
+  getSession?: Resolver<ResolversTypes['ViduSessionOutput'], ParentType, ContextType, RequireFields<QuerygetSessionArgs, 'sessionId'>>;
+  getToken?: Resolver<ResolversTypes['ViduTokenOutput'], ParentType, ContextType, RequireFields<QuerygetTokenArgs, 'sessionId'>>;
+  getTokenConnection?: Resolver<ResolversTypes['ViduTokenOutput'], ParentType, ContextType, RequireFields<QuerygetTokenConnectionArgs, 'sessionId'>>;
 }>;
 
 export type MutationResolvers<ContextType = MeshContext, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
@@ -231,12 +302,16 @@ export type Resolvers<ContextType = MeshContext> = ResolversObject<{
   DateTime?: GraphQLScalarType;
   LoginOutput?: LoginOutputResolvers<ContextType>;
   UserProfileOutput?: UserProfileOutputResolvers<ContextType>;
+  ViduSession?: ViduSessionResolvers<ContextType>;
+  TimeStamp?: GraphQLScalarType;
+  ViduSessionOutput?: ViduSessionOutputResolvers<ContextType>;
+  ViduTokenOutput?: ViduTokenOutputResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
 }>;
 
 
-export type MeshContext = UsersTypes.Context & BaseMeshContext;
+export type MeshContext = ServerTypes.Context & BaseMeshContext;
 
 
 const baseDir = pathModule.join(typeof __dirname === 'string' ? __dirname : '/', '..');

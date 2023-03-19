@@ -36,6 +36,14 @@ export default ({ mode }) => {
           find: 'store',
           replacement: path.resolve(__dirname, 'src/store'),
         },
+        {
+          find: 'gql',
+          replacement: path.resolve(__dirname, 'src/gql'),
+        },
+        {
+          find: 'model',
+          replacement: path.resolve(__dirname, 'src/model'),
+        },
       ],
     },
   })
