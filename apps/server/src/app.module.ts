@@ -19,6 +19,7 @@ import { UsersModule } from './users/users.module'
 import { AuthModule } from './auth/auth.module'
 import { SocketsModule } from './sockets/sockets.module'
 import { GrpcModule } from 'grpc/grpc.module'
+import { OpenviduModule } from './openvidu/openvidu.module'
 
 @Module({
   imports: [
@@ -36,6 +37,8 @@ import { GrpcModule } from 'grpc/grpc.module'
         REDIS_PASSWORD: joi.string().required(),
         JWT_PRIVATE_KEY: joi.string().required(),
         JWT_PUBLIC_KEY: joi.string().required(),
+        OEPNVIDU_URL: joi.string().required(),
+        OPENVIDU_SECRET: joi.string().required(),
       }),
     }),
     PrismaModule,
@@ -66,6 +69,10 @@ import { GrpcModule } from 'grpc/grpc.module'
     AuthModule,
     SocketsModule,
     GrpcModule.forRoot(),
+    OpenviduModule.forRoot({
+      OPENVIDU_URL: process.env.OPENVIDU_URL,
+      OPENVIDU_SECRET: process.env.OPENVIDU_SECRET,
+    }),
   ],
   controllers: [],
   providers: [],

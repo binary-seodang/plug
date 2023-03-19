@@ -19,3 +19,9 @@ services:
       POSTGRES_USER: PLUG
       POSTGRES_PASSWORD: 1234
       POSTGRES_DB: PLUG
+  openVidu:
+    image: openvidu/openvidu-dev:2.26.0
+    ports:
+      - "4443:4443"
+    environment:
+      OPENVIDU_SECRET: MY_SECRET
