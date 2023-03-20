@@ -19,7 +19,7 @@ export class OpenviduModule {
         OpenviduResolver,
         {
           provide: OPENVIDU_MODULE,
-          useValue: { vidu },
+          useValue: vidu,
         },
         OpenviduService,
       ],

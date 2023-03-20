@@ -44,6 +44,10 @@ export default ({ mode }) => {
           find: 'model',
           replacement: path.resolve(__dirname, 'src/model'),
         },
+        {
+          find: 'components',
+          replacement: path.resolve(__dirname, 'src/components'),
+        },
       ],
     },
   })

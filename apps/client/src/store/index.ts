@@ -1,6 +1,6 @@
+import { User } from 'gql/graphql'
 import { create } from 'zustand'
 import { devtools, subscribeWithSelector, persist, createJSONStorage } from 'zustand/middleware'
-import { User } from '__api__/types'
 
 interface IStore {
   user: User | null
@@ -16,7 +16,7 @@ const store = create(
         user: null,
         token: null,
         setUser: ({ user, token }) => {
-          localStorage.setItem('_PLUG_AUTH_', token)
+          localStorage.setItem(import.meta.env.VITE_AUTH_KEY, token)
           set((state) => ({ ...state, user, token }))
         },
         clear: () => {

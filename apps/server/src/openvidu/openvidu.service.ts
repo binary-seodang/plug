@@ -15,6 +15,7 @@ export class OpenviduService {
         session: { sessionId: res.sessionId, createdAt: res.createdAt },
       }
     } catch (err) {
+      console.log(err, '????')
       return { ok: false, error: err.message }
     }
   }

@@ -1,13 +1,21 @@
 import UserModel from 'model/UserModel'
-import { OpenVidu, Session, SignalOptions } from 'openvidu-browser'
+import { Device, OpenVidu, Session, SignalOptions } from 'openvidu-browser'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useGetToken from './useGetToken'
+
+interface DeserializeSignal {
+  isAudioActive: boolean
+  isVideoActive: boolean
+  nickname: string
+  isScreenShareActive: boolean
+}
 
 const useOv = (roomName: string) => {
   const [session, setSession] = useState<Session>()
   const [subscribers, setSubscriber] = useState<UserModel[]>([])
   const [localUserAccessAllowed, setLocalUserAccessAllowed] = useState(false)
-  const localUser = useRef(new UserModel()).current
+  const [localUser, setLocalUser] = useState(new UserModel())
+  const currentVideoDevice = useRef<Device>()
   const { getToken, token } = useGetToken()
   const ov = useRef(new OpenVidu()).current
 
@@ -21,7 +29,7 @@ const useOv = (roomName: string) => {
   }, [subscribers, localUser])
 
   const sendSignalUserChanged = useCallback(
-    (data: SignalOptions) => {
+    (data: Partial<DeserializeSignal>) => {
       if (session) {
         const signalOptions = {
           data: JSON.stringify(data),
@@ -62,6 +70,52 @@ const useOv = (roomName: string) => {
     }
   }, [session])
 
+  const subscribeToUserChanged = useCallback(() => {
+    if (session) {
+      session.on('signal:userChanged', (event) => {
+        const newRemoteSubscribers = [...subscribers]
+        newRemoteSubscribers.forEach((user) => {
+          if (user.getConnectionId() === event.from?.connectionId) {
+            const data = JSON.parse(event?.data ?? '')
+            console.log('EVENTO REMOTE: ', event.data)
+            if (data.isAudioActive) {
+              user.setAudioActive(data.isAudioActive)
+            }
+            if (data.isVideoActive !== undefined) {
+              user.setVideoActive(data.isVideoActive)
+            }
+            if (data.nickname !== undefined) {
+              user.setNickname(data.nickname)
+            }
+            if (data.isScreenShareActive !== undefined) {
+              user.setScreenShareActive(data.isScreenShareActive)
+            }
+          }
+        })
+        setSubscriber(() => newRemoteSubscribers)
+      })
+    }
+  }, [])
+  const deleteSubscriber = (stream) => {
+    const remoteUsers = [...subscribers]
+    const userStream =
+      remoteUsers.filter((user) => user.getStreamManager()?.stream === stream)[0] || []
+    let index = remoteUsers.indexOf(userStream, 0)
+    if (index > -1) {
+      remoteUsers.splice(index, 1)
+      setSubscriber(() => remoteUsers)
+    }
+  }
+
+  const subscribeToStreamDestroyed = () => {
+    if (session) {
+      session.on('streamDestroyed', (event) => {
+        event.preventDefault()
+        deleteSubscriber(event.stream)
+      })
+    }
+  }
+
   const connectWebCam = useCallback(async () => {
     if (session) {
       await ov.getUserMedia({ audioSource: undefined, videoSource: undefined })
@@ -89,34 +143,37 @@ const useOv = (roomName: string) => {
           })
         })
       }
+      // publisher.on('streamPlaying', (e) => {
+      //   publisher.videos[0].video.parentElement
+      // })
       // localUser.setNickname(this.state.myUserName)
       localUser.setConnectionId(session.connection.connectionId)
       localUser.setScreenShareActive(false)
       localUser.setStreamManager(publisher)
-      // this.subscribeToUserChanged()
-      // this.subscribeToStreamDestroyed()
-      // this.sendSignalUserChanged({ isScreenShareActive: localUser.isScreenShareActive() })
-
-      // this.setState({ currentVideoDevice: videoDevices[0], localUser: localUser }, () => {
-      //   this.state.localUser.getStreamManager().on('streamPlaying', (e) => {
-      //     this.updateLayout()
-      //     publisher.videos[0].video.parentElement.classList.remove('custom-class')
-      //   })
-      // })
+      console.log(localUser, 'changed')
+      subscribeToUserChanged()
+      subscribeToStreamDestroyed()
+      sendSignalUserChanged({ isScreenShareActive: localUser.isScreenShareActive() })
+      currentVideoDevice.current = videoDevices[0]
     }
-  }, [])
-  const connect = useCallback((token: string) => {
-    if (session) {
-      session
-        .connect(token, { clientData: localUser.getNickname() })
-        .then(() => {
-          connectWebCam()
-        })
-        .catch((error: any) => {
-          console.log('There was an error connecting to the session:', error.code, error.message)
-        })
-    }
-  }, [])
+  }, [session])
+  const connect = useCallback(
+    (token: string) => {
+      console.log('connection call')
+      if (session) {
+        session
+          .connect(token, { clientData: localUser.getNickname() })
+          .then(() => {
+            console.log('connection done')
+            connectWebCam()
+          })
+          .catch((error: any) => {
+            console.log('There was an error connecting to the session:', error.code, error.message)
+          })
+      }
+    },
+    [session],
+  )
 
   const connectToSession = useCallback(async () => {
     if (session) {
@@ -138,6 +195,12 @@ const useOv = (roomName: string) => {
   }, [token, session])
 
   useEffect(() => {
+    if (token) {
+      connect(token)
+    }
+  }, [token])
+
+  useEffect(() => {
     joinSession()
   }, [])
 
@@ -148,7 +211,10 @@ const useOv = (roomName: string) => {
     }
   }, [session])
 
-  return
+  return {
+    localUser,
+    subscribers,
+  }
 }
 
 export default useOv

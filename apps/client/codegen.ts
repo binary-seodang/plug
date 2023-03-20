@@ -17,4 +17,4 @@ const config: CodegenConfig = {
 }
 
 export default config
-// https://github.com/OpenVidu/openvidu-call-react/blob/dea85b34254e8540c0c9ca6874bb90f60603101c/openvidu-call-react/src/components/VideoRoomComponent.js
+

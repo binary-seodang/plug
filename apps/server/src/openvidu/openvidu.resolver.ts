@@ -12,7 +12,6 @@ export class OpenviduResolver {
     __typename: string
     sessionId: string
   }): Promise<ViduSessionOutput> {
-    console.log('?????????????', reference)
     return this.openviduService
       .getSession(reference.sessionId)
       .then((res) => res)

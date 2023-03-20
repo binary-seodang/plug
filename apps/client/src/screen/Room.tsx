@@ -8,11 +8,12 @@ import { handleIce } from 'libs/fn'
 import store from 'store/index'
 import { OpenVidu } from 'openvidu-browser'
 import useOv from 'hooks/useOv'
+import VideoArea from 'components/VideoArea'
 
 const Room = () => {
   const { roomName } = useParams()
   const navigate = useNavigate()
-  const test = useOv(roomName!)
+
   const [joinedUsers, setJoindUsers] = useState<[] | string[]>([])
   const [lastJoinedUser, setLastJoined] = useState<string | null>(null)
   const myVideo = useRef<HTMLVideoElement>(null)
@@ -20,6 +21,7 @@ const Room = () => {
   if (!roomName) {
     return null
   }
+  const { localUser, subscribers } = useOv(roomName!)
   const createPeer = useCallback(async (socket: Socket, stream?: MediaStream) => {
     const peer = new RTCPeerConnection({
       iceServers: [
@@ -159,7 +161,7 @@ const Room = () => {
   })
 
   const me = store((state) => state.user)
-  console.log(me)
+
   // const { isLoading, stream } = useRTCConnection({
   //   async onConnect(stream) {
   //     await createPeer(socket, stream)
@@ -168,6 +170,7 @@ const Room = () => {
   useEffect(() => {
     socket.emit('join_room', roomName, onRefreshRoomSetting)
   }, [])
+
   return (
     <div>
       {lastJoinedUser ? <h1>Welcome {lastJoinedUser} ! </h1> : null}
@@ -175,9 +178,8 @@ const Room = () => {
         <p key={item}>{item}</p>
       ))}
 
-      <video ref={myVideo}>
-        <source />
-      </video>
+      {localUser.getStreamManager() ? <VideoArea user={localUser} /> : null}
+      {subscribers.length ? subscribers.map((remoteUser) => <VideoArea user={remoteUser} />) : null}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { gql, useLazyQuery, useQuery } from '@apollo/client'
 import { graphql } from 'gql'
+import store from 'store/index'
 
 const GET_VIDU_TOKEN = graphql(/** GraphQl */ `
   query getToken($sessionId: String!) {
@@ -35,7 +36,14 @@ const GET_VIDU_TOKEN_CONNECTION = graphql(`
 `)
 
 const useGetToken = () => {
+  const oAuthToken = store((state) => state.token)
+
   const [getToken, { data, loading, error }] = useLazyQuery(GET_VIDU_TOKEN_CONNECTION, {
+    context: {
+      headers: {
+        [import.meta.env.VITE_AUTH_KEY]: oAuthToken,
+      },
+    },
     onCompleted(data) {
       console.log(data, '<<token')
     },
