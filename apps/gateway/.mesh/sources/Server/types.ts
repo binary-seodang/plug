@@ -3,7 +3,7 @@
 import { InContextSdkMethod } from '@graphql-mesh/types';
 import { MeshContext } from '@graphql-mesh/runtime';
 
-export namespace UsersTypes {
+export namespace ServerTypes {
   export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -68,6 +68,7 @@ export type Query = {
   getMe: UserProfileOutput;
   getSession: ViduSessionOutput;
   getToken: ViduTokenOutput;
+  getTokenConnection: ViduTokenOutput;
 };
 
 
@@ -82,6 +83,11 @@ export type QuerygetSessionArgs = {
 
 
 export type QuerygetTokenArgs = {
+  sessionId: Scalars['String'];
+};
+
+
+export type QuerygetTokenConnectionArgs = {
   sessionId: Scalars['String'];
 };
 
@@ -106,7 +112,9 @@ export type LoginInput = {
   /** null **/
   getSession: InContextSdkMethod<Query['getSession'], QuerygetSessionArgs, MeshContext>,
   /** null **/
-  getToken: InContextSdkMethod<Query['getToken'], QuerygetTokenArgs, MeshContext>
+  getToken: InContextSdkMethod<Query['getToken'], QuerygetTokenArgs, MeshContext>,
+  /** null **/
+  getTokenConnection: InContextSdkMethod<Query['getTokenConnection'], QuerygetTokenConnectionArgs, MeshContext>
   };
 
   export type MutationSdk = {
@@ -119,7 +127,7 @@ export type LoginInput = {
   };
 
   export type Context = {
-      ["Users"]: { Query: QuerySdk, Mutation: MutationSdk, Subscription: SubscriptionSdk },
+      ["Server"]: { Query: QuerySdk, Mutation: MutationSdk, Subscription: SubscriptionSdk },
       
     };
 }

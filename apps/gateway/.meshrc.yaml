@@ -1,5 +1,5 @@
 sources:
-  - name: Users
+  - name: Server
     handler:
       graphql:
         endpoint: http://localhost:4000/graphql

@@ -28,7 +28,7 @@ export class AuthGuard implements CanActivate {
         }
       }
     }
-
+    console.log(gqlContext)
     throw new RoleException()
   }
 }

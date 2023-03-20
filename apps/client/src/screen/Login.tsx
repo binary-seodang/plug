@@ -31,7 +31,6 @@ const Login = () => {
   const { register, handleSubmit } = useForm<LoginInput>()
   const navigate = useNavigate()
   const onCompleted = (data: LoginMutation) => {
-    console.log(data)
     const {
       login: { error, ok, token, user },
     } = data

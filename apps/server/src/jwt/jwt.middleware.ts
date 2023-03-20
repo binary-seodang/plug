@@ -23,6 +23,7 @@ export class JwtMiddleware implements NestMiddleware {
             req['user'] = user
           }
         } catch (e) {
+          console.log(e, '????')
           throw new RoleException()
         }
       }
